@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: cqm-v2-backend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
