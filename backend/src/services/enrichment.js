@@ -55,9 +55,10 @@ async function processQuestion(questionId) {
     }).eq('id', questionId);
   } catch (err) { console.error(`[processQuestion] DB update failed:`, err.message); return; }
 
-  if (isAutoApproved) {
-    try { await addApprovedAnswerToKB(question, answer, enrichment.category); } catch (err) { console.error(`[processQuestion] KB add failed:`, err.message); }
-  }
+  // Auto-KB removed: answers only go to KB via manual "Approve + Add to KB"
+
+
+
 }
 
 async function addApprovedAnswerToKB(question, answer, category) {

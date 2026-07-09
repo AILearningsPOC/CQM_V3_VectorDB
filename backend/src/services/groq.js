@@ -39,8 +39,16 @@ async function enrichQuestion(questionText) {
 }
 
 async function generateRagAnswer(question, kbContext, productInfo) {
-  const system = `You are a Hisense customer support specialist. Answer using the knowledge base context. Be concise and helpful. End with exactly: CONFIDENCE: [0-100]`;
-  const user = `Product Info:\n${productInfo}\n\nKnowledge Base:\n${kbContext}\n\nQuestion: ${question}\n\nAnswer then write:\nCONFIDENCE: [0-100]`;
+  const hasContext = kbContext && !kbContext.includes('No relevant context found');
+  const system = `You are a Hisense customer support specialist. Answer using the knowledge base context. Be concise and helpful.
+
+End your response with exactly: CONFIDENCE: [number]
+
+Confidence scoring rules (be accurate, not generous):
+- 0-30:  No relevant KB context found, question is unanswerable from available data (e.g. real-time stock/pricing), or highly speculative
+- 31-69: Partial KB context, some uncertainty, general answer only
+- 70-100: Strong KB match, specific answer grounded in provided context`;
+  const user = `Product Info:\n${productInfo}\n\nKnowledge Base Context:\n${kbContext}\n\nQuestion: ${question}\n\nProvide your answer, then on a new line write:\nCONFIDENCE: [0-100]`;
   const raw = await callGroq(system, user, 600);
   const match = raw.match(/CONFIDENCE:\s*(\d+)/i);
   const confidence = match ? Math.min(100, Math.max(0, parseInt(match[1]))) : 50;

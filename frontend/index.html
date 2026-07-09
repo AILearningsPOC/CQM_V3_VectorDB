@@ -1267,7 +1267,10 @@ async function refreshReviewQueue() {
       <tbody>
       ${data.map(q=>`
         <tr id="row-${q.id}">
-          <td style="white-space:nowrap;color:var(--text-muted);font-size:12px">${q.date_asked?new Date(q.date_asked).toLocaleDateString():new Date(q.created_at).toLocaleDateString()}</td>
+          <td style="white-space:nowrap;color:var(--text-muted);font-size:12px">
+            ${q.date_asked?new Date(q.date_asked).toLocaleDateString():new Date(q.created_at).toLocaleDateString()}
+            ${q.customer_name?'<div style="font-size:10px;color:var(--primary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+q.customer_name+'">👤 '+q.customer_name.substring(0,16)+'</div>':''}
+          </td>
           <td style="max-width:0">${q.product_url ? '<a href="'+q.product_url+'" target="_blank" rel="noreferrer" style="text-decoration:none">'+retailerBadge(q.retailer)+'</a><div style="font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px" title="'+(q.product_name||'')+'">'+(q.product_name||'').substring(0,28)+'</div>' : retailerBadge(q.retailer)}</td>
           <td style="max-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${q.question_text}</div></td>
           <td>${catBadge(q.category)}</td>
@@ -1554,27 +1557,35 @@ async function refreshAnswerQueue() {
     if (!data?.length) { card.innerHTML = emptyState('✅', 'No answered questions yet', 'Questions will appear here once approved.'); return; }
 
     card.innerHTML = `
-    <div class="table-wrap"><table>
-      <thead><tr>
-        <th>Date / Customer</th><th>Date Answered</th><th>Retailer / Product</th><th>Question</th>
-        <th>Category</th><th>Sentiment</th><th>Confidence</th><th>Assigned To</th>
-      </tr></thead>
-      <tbody>${data.map(q=>`
-        <tr>
-          <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">${q.date_asked?new Date(q.date_asked).toLocaleDateString():'—'}</td>
-          <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">${q.date_answered?new Date(q.date_answered).toLocaleDateString():'—'}</td>
-          <td style="max-width:0">${q.product_url ? '<a href="'+q.product_url+'" target="_blank" rel="noreferrer" style="text-decoration:none">'+retailerBadge(q.retailer)+'</a><div style="font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px" title="'+(q.product_name||'')+'">'+(q.product_name||'').substring(0,28)+'</div>' : retailerBadge(q.retailer)}</td>
-          <td style="max-width:320px">
-            <div style="font-weight:500;font-size:13px;margin-bottom:4px">${q.question_text}</div>
-            ${q.ai_answer ? '<div style="font-size:11px;color:var(--text-muted);line-height:1.4;border-left:2px solid var(--primary);padding-left:6px;margin-top:4px">'+q.ai_answer.substring(0,120)+(q.ai_answer.length>120?'...':'')+'</div>' : '<div style="font-size:11px;color:var(--text-muted);font-style:italic">No answer yet</div>'}
-          </td>
-          <td>${catBadge(q.category)}</td>
-          <td>${sentBadge(q.sentiment)}</td>
-          <td>${confidenceBadge(q.confidence)}</td>
-          <td style="font-size:12px;color:var(--text-secondary)">${q.assigned_to||'Auto'}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${data.map(q=>`
+        <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow-sm)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0">
+              <div style="flex-shrink:0">
+                ${q.product_url ? '<a href="'+q.product_url+'" target="_blank" rel="noreferrer" style="text-decoration:none">'+retailerBadge(q.retailer)+'</a>' : retailerBadge(q.retailer)}
+                <div style="font-size:10px;color:var(--text-muted);margin-top:3px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${q.product_name||''}">${(q.product_name||'').substring(0,18)}</div>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13px;color:var(--text-primary);margin-bottom:6px;line-height:1.4">${q.question_text}</div>
+                ${q.ai_answer ? '<div style="font-size:12px;color:var(--text-secondary);line-height:1.5;border-left:3px solid var(--primary);padding-left:10px;background:var(--hover-bg);border-radius:0 6px 6px 0;padding:8px 10px">'+q.ai_answer.substring(0,200)+(q.ai_answer.length>200?'…':'')+'</div>' : '<div style="font-size:11px;color:var(--text-muted);font-style:italic">No answer recorded</div>'}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+              ${confidenceBadge(q.confidence)}
+              ${catBadge(q.category)}
+              ${sentBadge(q.sentiment)}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);flex-wrap:wrap">
+            ${q.customer_name ? '<span>👤 <strong style="color:var(--text-secondary)">' + q.customer_name + '</strong></span>' : ''}
+            <span>📅 Asked: ${q.date_asked ? new Date(q.date_asked).toLocaleDateString() : '—'}</span>
+            <span>✅ Answered: ${q.date_answered ? new Date(q.date_answered).toLocaleDateString() : '—'}</span>
+            <span>🧑 ${q.assigned_to || 'Auto'}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
     ${pagination(total, answerPage, 20, 'loadAnswerQueue')}`;
   } catch (e) { card.innerHTML = emptyState('⚠️', 'Error', e.message); }
 }
