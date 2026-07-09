@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CQM — Customer Query Management</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230176D3'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Inter,system-ui,sans-serif' font-size='13' font-weight='800' fill='white'%3ECQM%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#0176D3">
+<meta name="description" content="Customer Query Management — AI-powered eCommerce Q&A automation">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   CQM v3 — Enterprise Design System (Salesforce Lightning Inspired)
+   Default: Light Mode
+═══════════════════════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --primary:      #0176D3;
+  --primary-dark: #0B5CAB;
+  --primary-light:#E8F4FD;
+  --accent:       #0176D3;
+
+  /* Semantic */
+  --success:      #2E844A;
+  --success-bg:   #EEF6F1;
+  --warning:      #DD7A01;
+  --warning-bg:   #FEF6E6;
+  --danger:       #EA001E;
+  --danger-bg:    #FEE8EA;
+  --info:         #0176D3;
+  --info-bg:      #E8F4FD;
+
+  /* Layout */
+  --bg:           #F4F6F9;
+  --surface:      #FFFFFF;
+  --card:         #FFFFFF;
+  --border:       #D8DDE6;
+  --border-light: #E8ECF2;
+
+  /* Typography */
+  --text:         #181818;
+  --text-secondary:#5F6A7D;
+  --text-muted:   #8896A9;
+
+  /* Elevation */
+  --shadow-xs:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.05);
+  --shadow-md:    0 4px 16px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+  --shadow-lg:    0 8px 32px rgba(0,0,0,.12), 0 4px 12px rgba(0,0,0,.08);
+
+  /* Sizing */
+  --radius-sm:    5px;
+  --radius:       8px;
+  --radius-lg:    10px;
+  --radius-xl:    20px;
+  --topbar-h:     48px;
+  --sidebar-w:    220px;
+  --font:         'Inter', system-ui, sans-serif;
+
+  /* Transitions */
+  --t:            150ms ease;
+  --t-md:         250ms ease;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] {
+  --bg:           #0F1117;
+  --surface:      #181C24;
+  --card:         #1E2330;
+  --border:       #2A3042;
+  --border-light: #252D3D;
+  --text:         #E8EAF0;
+  --text-secondary:#8892A4;
+  --text-muted:   #5A6475;
+  --primary-light:#1A2A3E;
+  --success-bg:   #0D2318;
+  --warning-bg:   #2A1E06;
+  --danger-bg:    #2A0A0E;
+  --info-bg:      #0C1E30;
+  --shadow-xs:    0 1px 3px rgba(0,0,0,.3);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,.4);
+  --shadow-md:    0 4px 16px rgba(0,0,0,.5);
+  --shadow-lg:    0 8px 32px rgba(0,0,0,.6);
+}
+
+/* ── RESET ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: var(--font); font-size: 13px; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+a { text-decoration: none; color: var(--primary); }
+button { font-family: inherit; cursor: pointer; }
+
+/* ── LAYOUT ─────────────────────────────────────────────────────── */
+#app { display: flex; height: 100vh; overflow: hidden; }
+#sidebar { width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: width var(--t-md); z-index: 100; }
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+#content { flex: 1; overflow-y: auto; padding: 20px 24px; background: var(--bg); }
+
+/* ── TOPBAR ─────────────────────────────────────────────────────── */
+#topbar {
+  height: var(--topbar-h);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-bottom: none; display: flex;
+  align-items: center; padding: 0 24px; gap: 12px;
+  flex-shrink: 0; box-shadow: 0 2px 12px rgba(1,118,211,.3); position: relative; z-index: 50;
+}
+.topbar-logo { display: flex; align-items: center; gap: 10px; margin-right: 8px; }
+.topbar-logo .logo-icon { width: 30px; height: 30px; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 11px; letter-spacing: .05em; flex-shrink: 0; }
+.topbar-logo .logo-text { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; }
+.topbar-logo .logo-sub { font-size: 11px; color: rgba(255,255,255,.7); }
+.topbar-divider { width: 1px; height: 28px; background: rgba(255,255,255,.25); flex-shrink: 0; }
+.topbar-search { flex: 1; max-width: 340px; position: relative; }
+.topbar-search input { width: 100%; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; padding: 8px 12px 8px 36px; border-radius: var(--radius); font-size: 13px; font-family: inherit; transition: border-color var(--t), box-shadow var(--t); }
+.topbar-search input::placeholder { color: rgba(255,255,255,.6); }
+.topbar-search input:focus { outline: none; border-color: rgba(255,255,255,.6); box-shadow: 0 0 0 3px rgba(255,255,255,.15); background: rgba(255,255,255,.2); }
+.topbar-search .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,.7); font-size: 13px; pointer-events: none; }
+.topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.topbar-controls { display: flex; align-items: center; gap: 8px; }
+.icon-btn { width: 30px; height: 30px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.15); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: all var(--t); }
+.icon-btn:hover { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.5); }
+.health-dot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.8); padding: 5px 10px; border-radius: var(--radius-sm); background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); }
+
+/* Scraping controls in topbar */
+.scraping-controls { display: flex; align-items: center; gap: 8px; }
+.toggle-group { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.9); white-space: nowrap; }
+.toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer; transition: var(--t); }
+.toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: var(--t); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
+.engine-toggle { display: flex; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.4); border-radius: var(--radius-sm); overflow: hidden; }
+.engine-btn { padding: 5px 11px; cursor: pointer; color: rgba(255,255,255,.95); transition: all var(--t); border: none; background: transparent; font-size: 11px; font-weight: 600; font-family: inherit; opacity: 1 !important; pointer-events: all !important; }
+.engine-btn:hover { background: rgba(255,255,255,.2); }
+.engine-btn.active { background: rgba(255,255,255,.95); color: var(--primary-dark); font-weight: 700; }
+.role-selector { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.85); }
+.role-selector select { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; padding: 5px 10px; border-radius: var(--radius-sm); font-size: 12px; font-family: inherit; cursor: pointer; }
+.role-selector select option { background: var(--primary-dark); color: #fff; }
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────── */
+.sidebar-header { padding: 14px 14px 12px; border-bottom: 1px solid var(--border-light); }
+.sidebar-brand { font-size: 10px; font-weight: 700; letter-spacing: .1em; color: var(--primary); text-transform: uppercase; }
+.sidebar-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; font-weight: 500; }
+.sidebar-hisense { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+nav { flex: 1; padding: 10px 10px; overflow-y: auto; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; padding: 10px 8px 4px; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; cursor: pointer; border-radius: var(--radius-sm); transition: all var(--t); color: var(--text-secondary); font-size: 13px; font-weight: 500; position: relative; margin-bottom: 1px; text-decoration: none; }
+.nav-item:hover { background: var(--primary-light); color: var(--primary); }
+.nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+.nav-item.active::before { content: ''; position: absolute; left: 0; top: 20%; bottom: 20%; width: 3px; background: var(--primary); border-radius: 0 3px 3px 0; }
+.nav-item .nav-icon { width: 18px; text-align: center; font-size: 14px; flex-shrink: 0; }
+.nav-badge { background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; margin-left: auto; min-width: 18px; text-align: center; }
+.sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--border-light); }
+.sidebar-footer-info { font-size: 11px; color: var(--text-muted); }
+
+/* ── PAGE HEADER ─────────────────────────────────────────────────── */
+.page-header { margin-bottom: 12px; }
+.page-header h1 { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -.1px; }
+.page-header p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.breadcrumb span { color: var(--text-muted); }
+
+/* ── CARDS ───────────────────────────────────────────────────────── */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; box-shadow: var(--shadow-xs); transition: box-shadow var(--t-md); margin-bottom: 16px; }
+.card:hover { box-shadow: var(--shadow-sm); }
+.card-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.card-title i { color: var(--primary); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+.card-header-title { font-size: 16px; font-weight: 700; color: var(--text); }
+
+/* ── KPI STATS ───────────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow-xs); transition: all var(--t-md); position: relative; overflow: hidden; }
+.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); border-radius: var(--radius-lg) var(--radius-lg) 0 0; opacity: 0; transition: opacity var(--t); }
+.stat-card:hover::before { opacity: 1; }
+.stat-icon { width: 32px; height: 32px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 15px; margin-bottom: 10px; }
+.stat-value { font-size: 24px; font-weight: 800; line-height: 1; letter-spacing: -.3px; color: var(--text); }
+.stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+.stat-sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+.stat-card.primary .stat-icon { background: var(--primary-light); color: var(--primary); }
+.stat-card.primary .stat-value { color: var(--primary); }
+.stat-card.success .stat-icon { background: var(--success-bg); color: var(--success); }
+.stat-card.success .stat-value { color: var(--success); }
+.stat-card.warning .stat-icon { background: var(--warning-bg); color: var(--warning); }
+.stat-card.warning .stat-value { color: var(--warning); }
+.stat-card.danger .stat-icon { background: var(--danger-bg); color: var(--danger); }
+.stat-card.danger .stat-value { color: var(--danger); }
+.stat-card.info .stat-icon { background: var(--info-bg); color: var(--info); }
+.stat-card.info .stat-value { color: var(--info); }
+
+/* ── CHARTS ──────────────────────────────────────────────────────── */
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+.chart-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow-xs); }
+.chart-box h3 { font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; }
+canvas { max-height: 180px; }
+
+/* ── TABLES ──────────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; }
+thead { position: sticky; top: 0; z-index: 1; }
+th { text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; background: var(--bg); border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; font-size: 13px; color: var(--text); }
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background var(--t); }
+tbody tr:hover td { background: var(--primary-light); }
+.truncate { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── BADGES ──────────────────────────────────────────────────────── */
+.badge-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-green  { background: var(--success-bg); color: var(--success); border: 1px solid rgba(46,132,74,.2); }
+.badge-red    { background: var(--danger-bg);  color: var(--danger);  border: 1px solid rgba(234,0,30,.2); }
+.badge-yellow { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(221,122,1,.2); }
+.badge-blue   { background: var(--info-bg);    color: var(--primary); border: 1px solid rgba(1,118,211,.2); }
+.badge-purple { background: #F3EEFF; color: #6B21A8; border: 1px solid rgba(107,33,168,.2); }
+.badge-orange { background: #FEF3E6; color: #C25D00; border: 1px solid rgba(194,93,0,.2); }
+.badge-gray   { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+[data-theme="dark"] .badge-purple { background: #2D1A4A; color: #C084FC; }
+[data-theme="dark"] .badge-orange { background: #2A1800; color: #FB923C; }
+
+/* ── BUTTONS ─────────────────────────────────────────────────────── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all var(--t); white-space: nowrap; font-family: inherit; letter-spacing: .01em; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; box-shadow: 0 2px 6px rgba(1,118,211,.3); }
+.btn-primary:hover { box-shadow: 0 4px 12px rgba(1,118,211,.4); transform: translateY(-1px); }
+.btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow-xs); }
+.btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.btn-success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(46,132,74,.3); }
+.btn-success:hover { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(234,0,30,.2); }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-xs { padding: 3px 8px; font-size: 11px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; }
+
+/* ── FORMS ───────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 12px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+  color: var(--text); padding: 7px 11px; border-radius: var(--radius-sm);
+  font-size: 13px; font-family: inherit; transition: border-color var(--t), box-shadow var(--t);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(1,118,211,.12);
+}
+.form-textarea { resize: vertical; min-height: 90px; }
+.form-select { cursor: pointer; }
+.form-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+
+/* ── FILTERS ROW ─────────────────────────────────────────────────── */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.filters .form-select { width: auto; padding: 7px 11px; font-size: 12px; }
+.filters .form-input { width: 220px; padding: 7px 11px; font-size: 12px; }
+
+/* ── SECTION HEADER ──────────────────────────────────────────────── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 12px; }
+.section-title { font-size: 17px; font-weight: 700; color: var(--text); }
+
+/* ── EXPAND PANEL ────────────────────────────────────────────────── */
+.expand-row { display: none; }
+.expand-row.open { display: table-row; }
+.expand-panel { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin: 6px 0; }
+.expand-panel h4 { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+
+/* ── AGENT CARDS ─────────────────────────────────────────────────── */
+.agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.agent-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow-xs); transition: all var(--t-md); }
+.agent-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.agent-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+.agent-name { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+.agent-role { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; }
+.agent-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border-light); }
+.agent-stat { text-align: center; }
+.agent-stat .val { font-size: 18px; font-weight: 800; color: var(--text); }
+.agent-stat .lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.sla-alert { color: var(--danger) !important; }
+
+/* ── UPLOAD ZONE ─────────────────────────────────────────────────── */
+.upload-zone { border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 28px 20px; text-align: center; cursor: pointer; transition: all var(--t-md); background: var(--bg); }
+.upload-zone:hover, .upload-zone.drag { border-color: var(--primary); background: var(--primary-light); }
+.upload-zone .upload-icon { font-size: 40px; color: var(--primary); margin-bottom: 12px; }
+.upload-zone p { color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+.upload-zone .upload-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+/* ── SCRAPE LOGS ─────────────────────────────────────────────────── */
+.log-entry { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 14px; margin-bottom: 6px; font-size: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow-xs); transition: box-shadow var(--t); }
+.log-entry:hover { box-shadow: var(--shadow-sm); }
+.log-entry.has-error { border-color: rgba(234,0,30,.3); background: var(--danger-bg); }
+.log-time { color: var(--text-muted); white-space: nowrap; font-size: 11px; }
+
+/* ── PDF PREVIEW ─────────────────────────────────────────────────── */
+.pdf-preview { width: 100%; height: 520px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; }
+
+/* ── INNER TABS ──────────────────────────────────────────────────── */
+.tab-bar { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 24px; gap: 0; }
+.tab-btn { padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: none; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all var(--t); font-family: inherit; }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-btn:hover { color: var(--text); }
+
+/* ── TOAST ───────────────────────────────────────────────────────── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); padding: 13px 20px; border-radius: var(--radius); font-size: 13px; z-index: 9999; max-width: 340px; box-shadow: var(--shadow-lg); transform: translateY(100px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--primary); }
+
+/* ── PAGINATION ──────────────────────────────────────────────────── */
+.pagination { display: flex; gap: 5px; align-items: center; margin-top: 14px; justify-content: flex-end; }
+.page-btn { padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); transition: all var(--t); font-weight: 500; font-family: inherit; }
+.page-btn:hover { border-color: var(--primary); color: var(--primary); }
+.page-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── CONFIDENCE BAR ──────────────────────────────────────────────── */
+.confidence-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+.confidence-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+
+/* ── EMPTY STATE ─────────────────────────────────────────────────── */
+.empty { text-align: center; padding: 36px 24px; }
+.empty-icon { font-size: 36px; color: var(--border); margin-bottom: 12px; }
+.empty-title { font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+.empty-sub { font-size: 12px; color: var(--text-muted); max-width: 360px; margin: 0 auto 20px; line-height: 1.6; }
+
+/* ── SKELETON LOADING ────────────────────────────────────────────── */
+.skeleton { background: linear-gradient(90deg, var(--border-light) 25%, var(--border) 50%, var(--border-light) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: var(--radius-sm); }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skeleton-row { display: flex; gap: 12px; padding: 14px; border-bottom: 1px solid var(--border-light); }
+.skeleton-row .sk-cell { height: 14px; border-radius: 4px; }
+
+/* ── WELCOME BANNER ──────────────────────────────────────────────── */
+.welcome-banner { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: var(--radius-lg); padding: 16px 22px; color: #fff; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: 0 4px 20px rgba(1,118,211,.3); }
+.welcome-text h2 { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+.welcome-text p { font-size: 12px; opacity: .85; }
+.welcome-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.btn-white { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(4px); }
+.btn-white:hover { background: rgba(255,255,255,.3); transform: translateY(-1px); }
+
+/* ── DATE RANGE BUTTON ──────────────────────────────────────── */
+.date-range-btn { position:relative; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:7px 14px; font-size:13px; font-weight:500; color:var(--text-primary); white-space:nowrap; transition:all .15s; }
+.date-range-btn:hover { border-color:var(--primary); color:var(--primary); }
+.date-range-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.date-range-menu { position:absolute; top:calc(100% + 6px); left:0; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,.18); min-width:170px; z-index:9999; overflow:hidden; display:none; }
+.date-range-menu.open { display:block; }
+.date-range-menu a, .date-range-menu .dr-item { display:block; padding:10px 16px; font-size:13px; color:#1a1a2e; background:#fff; cursor:pointer; transition:background .1s; text-decoration:none; border:none; }
+.date-range-menu a:hover, .date-range-menu .dr-item:hover { background:#f0f4ff; }
+.date-range-menu a.selected, .date-range-menu .dr-item.selected { color:var(--primary); font-weight:600; background:#f0f4ff; }
+[data-theme="dark"] .date-range-menu { background:#1e2030; }
+[data-theme="dark"] .date-range-menu a, [data-theme="dark"] .date-range-menu .dr-item { background:#1e2030; color:#e0e0e0; }
+[data-theme="dark"] .date-range-menu a:hover, [data-theme="dark"] .date-range-menu .dr-item:hover { background:#2a2d45; }
+
+/* ── MISC ────────────────────────────────────────────────────────── */
+.flex { display: flex; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.items-center { align-items: center; }
+.text-muted { color: var(--text-muted); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-primary { color: var(--primary); }
+.loading { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #sidebar { width: 64px; }
+  .sidebar-header .sidebar-sub,
+  .sidebar-header .sidebar-hisense,
+  .nav-section-label,
+  .sidebar-footer-info { display: none; }
+  .sidebar-header { padding: 12px 8px; text-align: center; }
+  .sidebar-header .sidebar-brand { font-size: 9px; letter-spacing: .05em; }
+  .nav-item { justify-content: center; padding: 10px 0; }
+  .nav-item > span:not(.nav-icon):not(.nav-badge) { display: none; }
+  .nav-item .nav-icon { width: 28px; font-size: 18px; }
+  .nav-item::before { display: none; }
+  .nav-badge { position: absolute; top: 4px; right: 4px; min-width: 14px; padding: 1px 4px; font-size: 9px; }
+  #content { padding: 16px; }
+  .chart-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .welcome-banner { flex-direction: column; }
+}
+@media (max-width: 600px) {
+  .topbar-search, .topbar-divider { display: none; }
+  .scraping-controls { gap: 4px; }
+  .engine-toggle { display: none; }
+}
+
+#review-table td { padding: 8px 8px; font-size: 12px; vertical-align: middle; }
+#review-table th { padding: 8px 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══ SIDEBAR ════════════════════════════════════════════════════ -->
+<div id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">CQM</div>
+    <div class="sidebar-sub">Customer Query Management</div>
+  </div>
+  <nav id="nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item active" data-tab="dashboard" onclick="showTab('dashboard')">
+      <span class="nav-icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a class="nav-item" data-tab="scrape-targets" onclick="showTab('scrape-targets')">
+      <span class="nav-icon">🎯</span>
+      <span>Scrape Targets</span>
+    </a>
+    <div class="nav-section-label">Queues</div>
+    <a class="nav-item" data-tab="review-queue" onclick="showTab('review-queue')">
+      <span class="nav-icon">🔍</span>
+      <span>Review Queue</span>
+      <span class="nav-badge" id="review-badge" style="display:none">0</span>
+    </a>
+    <a class="nav-item" data-tab="answer-queue" onclick="showTab('answer-queue')">
+      <span class="nav-icon">✅</span>
+      <span>Answered</span>
+    </a>
+    <div class="nav-section-label">Knowledge</div>
+    <a class="nav-item" data-tab="knowledge-base" onclick="showTab('knowledge-base')">
+      <span class="nav-icon">📚</span>
+      <span>Knowledge Base</span>
+    </a>
+    <div class="nav-section-label">Operations</div>
+    <a class="nav-item" data-tab="agents" onclick="showTab('agents')">
+      <span class="nav-icon">👥</span>
+      <span>Agents</span>
+    </a>
+    <a class="nav-item" data-tab="scrape-logs" onclick="showTab('scrape-logs')">
+      <span class="nav-icon">📋</span>
+      <span>Scrape Logs</span>
+    </a>
+    <a class="nav-item" data-tab="post-answers" onclick="showTab('post-answers')">
+      <span class="nav-icon">📤</span>
+      <span>Post Answers</span>
+    </a>
+    <a class="nav-item" data-tab="config" onclick="showTab('config')">
+      <span class="nav-icon">⚙️</span>
+      <span>Configuration</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-info" id="health-indicator">Checking connection...</div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══════════════════════════════════════════════════════ -->
+<div id="main">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="topbar-logo">
+      <div class="logo-icon">CQM</div>
+      <div>
+        <div class="logo-text" id="page-title">Dashboard</div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="scraping-controls">
+        <div class="toggle-group">
+          <span>Auto</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="auto-toggle" onchange="toggleAuto(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="engine-toggle">
+          <button class="engine-btn" id="engine-scraperapi" onclick="setEngine('scraperapi')">ScraperAPI</button>
+          <button class="engine-btn active" id="engine-apify" onclick="setEngine('apify')">Apify</button>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="scrapeNow()" id="scrape-now-btn">
+          ⚡ Scrape Now
+        </button>
+      </div>
+      <div class="topbar-divider"></div>
+      <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+        🌙
+      </button>
+      <div class="role-selector">
+        
+        <select id="role-select" onchange="setRole(this.value)">
+          <option value="admin">👑 Admin User</option>
+          <option value="manager">📊 Sarah Manager</option>
+          <option value="agent_alex">🎧 Alex Agent</option>
+          <option value="agent_jamie">🎧 Jamie Agent</option>
+        </select>
+        <span id="role-indicator" style="font-size:11px;color:var(--success);white-space:nowrap"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <div id="tab-dashboard"></div>
+    <div id="tab-scrape-targets" style="display:none"></div>
+    <div id="tab-review-queue" style="display:none"></div>
+    <div id="tab-answer-queue" style="display:none"></div>
+    <div id="tab-knowledge-base" style="display:none"></div>
+    <div id="tab-agents" style="display:none"></div>
+    <div id="tab-scrape-logs" style="display:none"></div>
+    <div id="tab-post-answers" style="display:none"></div>
+    <div id="tab-config" style="display:none"></div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+// CQM v3 — Frontend JS
+// ================================================================
+
+// Close PDF modal on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('pdf-modal-overlay');
+    if (modal) modal.remove();
+  }
+});
+
+// Global error boundary — catch any uncaught JS errors
+window.addEventListener('error', (e) => {
+  console.error('Uncaught error:', e.error || e.message);
+  try { toast('Unexpected error: ' + (e.message || 'Unknown error'), 'error'); } catch(ex) {}
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled promise rejection:', e.reason);
+  const msg = e.reason?.message || String(e.reason) || 'Unknown error';
+  try { toast('Error: ' + msg, 'error'); } catch(ex) {}
+  e.preventDefault(); // Prevent "Uncaught" in console
+});
+
+function getAPI() {
+  return (localStorage.getItem('cqm_api_url') || 'https://cqm-v3-vectordb.onrender.com/api').replace(/\/$/, '');
+}
+let API = getAPI();
+
+let currentTab = 'dashboard';
+let currentRole = 'admin';
+let scrapingConfig = { auto_enabled: true, engine: 'apify', interval_minutes: 10 };
+let dashCharts = {};
+let reviewPage = 1, answerPage = 1;
+let rqDateRange = "", aqDateRange = "", dashDateRange = "";
+let agentsCache = [];
+// Filter state persistence
+let filterState = {
+  rq: { retailer: '', category: '', sentiment: '' },
+  aq: { retailer: '', category: '' },
+  kb: { search: '', category: '', source: '' }
+};
+
+// ── THEME ──────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : '');
+  localStorage.setItem('cqm_theme', theme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  const current = localStorage.getItem('cqm_theme') || 'light';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+
+// ── INIT ───────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try { applyTheme(localStorage.getItem('cqm_theme') || 'light'); } catch(e) { console.error('Theme error:', e); }
+  try { if (!localStorage.getItem('cqm_api_url')) showApiSetup(); } catch(e) { console.error('API setup error:', e); }
+  try { await loadConfig(); } catch(e) { console.warn('Config load failed (non-fatal):', e.message); }
+  try { await checkHealth(); } catch(e) { console.warn('Health check failed (non-fatal):', e.message); }
+  try {
+    showTab('dashboard');
+  } catch(e) {
+    console.error('showTab failed:', e);
+    // Last resort: show content area anyway
+    document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+    const dash = document.getElementById('tab-dashboard');
+    if (dash) { dash.style.display = ''; dash.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Dashboard failed to load</div><div class="empty-sub">Please check your API URL in Configuration.</div></div>'; }
+  }
+  setInterval(() => { try { checkHealth(); } catch(e) {} }, 30000);
+  setInterval(() => { try { if (currentTab === 'review-queue') loadReviewQueue(); } catch(e) {} }, 60000);
+});
+
+function showApiSetup() {
+  const existing = document.getElementById('api-setup-banner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'api-setup-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:var(--primary);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+  banner.innerHTML = `
+    ⚙️
+    <span style="font-weight:600">Set your backend API URL to connect:</span>
+    <input id="api-url-input" type="text" placeholder="https://your-app.onrender.com/api"
+      style="flex:1;padding:7px 12px;border-radius:6px;border:none;font-size:13px;max-width:400px;color:#181818">
+    <button onclick="saveApiUrl()" style="background:#fff;color:var(--primary);border:none;padding:7px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px">Save</button>
+    <button onclick="document.getElementById('api-setup-banner').remove()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px">Skip</button>`;
+  document.body.prepend(banner);
+}
+
+function saveApiUrl() {
+  const input = document.getElementById('api-url-input')?.value?.trim();
+  if (!input) return;
+  const url = input.endsWith('/api') ? input : input.replace(/\/$/, '') + '/api';
+  localStorage.setItem('cqm_api_url', url);
+  API = url;
+  document.getElementById('api-setup-banner')?.remove();
+  toast('API URL saved', 'success');
+  setTimeout(() => location.reload(), 800);
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  try {
+    const t = document.getElementById('toast');
+    if (!t) return console.log(`[toast:${type}] ${msg}`);
+    t.innerHTML = msg;
+    t.className = `toast show ${type}`;
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => { try { t.classList.remove('show'); } catch(e){} }, 3500);
+  } catch(e) { console.error('Toast error:', e); }
+}
+
+// ── HEALTH ─────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const data = await apiFetch('/health');
+    const el = document.getElementById('health-indicator');
+    if (data.status === 'ok') {
+      el.innerHTML = `<span style="color:var(--success)">● Connected</span> · ${data.counts?.questions||0} questions`;
+    } else {
+      el.innerHTML = `<span style="color:var(--danger)">● Error</span>`;
+    }
+    updateReviewBadge(data.counts?.review || 0);
+  } catch {
+    const el = document.getElementById('health-indicator');
+    if (el) el.innerHTML = `<span style="color:var(--danger)">● Offline</span>`;
+  }
+}
+
+function updateReviewBadge(count) {
+  const badge = document.getElementById('review-badge');
+  if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
+}
+
+// ── API HELPER ─────────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  if (!API) throw new Error('API URL not configured. Go to Configuration and set your backend URL.');
+  try {
+    const res = await fetch(API + path, {
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      ...options
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || `HTTP ${res.status}: ${res.statusText}`);
+    }
+    return res.json();
+  } catch(e) {
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      throw new Error('Cannot reach backend. Check your API URL in Configuration or verify the backend is running.');
+    }
+    throw e;
+  }
+}
+
+// ── TAB NAVIGATION ─────────────────────────────────────────────────
+function showTab(tab) {
+  try {
+    // Hide all tabs, show selected
+    document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+    const tabEl = document.getElementById('tab-' + tab);
+    if (!tabEl) { console.error('Tab element not found: tab-' + tab); return; }
+    tabEl.style.display = '';
+    currentTab = tab;
+
+    // Update nav active state
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navEl = document.querySelector('[data-tab="' + tab + '"]');
+    if (navEl) navEl.classList.add('active');
+
+    // Update page title
+    const titles = {
+      'dashboard':'Dashboard','scrape-targets':'Scrape Targets','review-queue':'Review Queue',
+      'answer-queue':'Answered Questions','knowledge-base':'Knowledge Base','agents':'Agents',
+      'scrape-logs':'Scrape Logs','post-answers':'Post Answers','config':'Configuration'
+    };
+    const titleEl = document.getElementById('page-title');
+    if (titleEl) titleEl.textContent = titles[tab] || tab;
+
+    // Load tab content
+    const loaders = {
+      'dashboard':loadDashboard,'scrape-targets':loadScrapeTargets,'review-queue':loadReviewQueue,
+      'answer-queue':loadAnswerQueue,'knowledge-base':loadKB,'agents':loadAgents,
+      'scrape-logs':loadScrapeLogs,'post-answers':loadPostAnswers,'config':loadConfig_tab
+    };
+    if (loaders[tab]) loaders[tab]();
+  } catch(e) {
+    console.error('showTab error:', e);
+  }
+}
+
+// ── ROLE ───────────────────────────────────────────────────────────
+function setRole(role) {
+  currentRole = role;
+  applyRoleRestrictions(role);
+  // Reload current tab to apply role filters
+  showTab(currentTab);
+}
+
+function applyRoleRestrictions(role) {
+  // Define what each role can see
+  const roleAccess = {
+    admin:       ['dashboard','scrape-targets','review-queue','answer-queue','knowledge-base','agents','scrape-logs','post-answers','config'],
+    manager:     ['dashboard','scrape-targets','review-queue','answer-queue','knowledge-base','agents','scrape-logs','post-answers'],
+    agent_alex:  ['review-queue','answer-queue','knowledge-base','post-answers'],
+    agent_jamie: ['review-queue','answer-queue','knowledge-base','post-answers'],
+  };
+
+  const allowed = roleAccess[role] || roleAccess.admin;
+
+  // Show/hide nav items based on role
+  document.querySelectorAll('.nav-item[data-tab]').forEach(item => {
+    const tab = item.getAttribute('data-tab');
+    const canSee = allowed.includes(tab);
+    item.style.display = canSee ? '' : 'none';
+  });
+
+  // Show role indicator in topbar
+  const roleLabels = {
+    admin:       '👑 Admin — Full Access',
+    manager:     '📊 Manager — No Config',
+    agent_alex:  '🎧 Alex Agent — My Queue Only',
+    agent_jamie: '🎧 Jamie Agent — My Queue Only',
+  };
+  const indicator = document.getElementById('role-indicator');
+  if (indicator) {
+    indicator.textContent = roleLabels[role] || role;
+    indicator.style.color = role.startsWith('agent') ? 'var(--warning)' : role === 'manager' ? 'var(--info)' : 'var(--success)';
+  }
+
+  // If current tab not allowed, redirect to first allowed tab
+  if (!allowed.includes(currentTab)) {
+    const firstAllowed = allowed[0] || 'review-queue';
+    showTab(firstAllowed);
+  }
+}
+
+// ── SCRAPING CONTROLS ──────────────────────────────────────────────
+async function loadConfig() {
+  try {
+    const cfg = await apiFetch('/config');
+    scrapingConfig = cfg.scraping_config || scrapingConfig;
+    const autoToggle = document.getElementById('auto-toggle');
+    if (autoToggle) autoToggle.checked = scrapingConfig.auto_enabled;
+    setEngineUI(scrapingConfig.engine || 'scraperapi');
+  } catch(e) {
+    console.warn('loadConfig failed:', e.message);
+    // Non-fatal: use defaults
+  }
+}
+
+function setEngineUI(engine) {
+  document.getElementById('engine-scraperapi').classList.toggle('active', engine === 'scraperapi');
+  document.getElementById('engine-apify').classList.toggle('active', engine === 'apify');
+}
+
+async function setEngine(engine) {
+  // Update UI immediately — don't wait for API
+  scrapingConfig.engine = engine;
+  setEngineUI(engine);
+  // Save to backend async
+  try {
+    await saveScrapingConfig();
+    toast(`Engine switched to ${engine}`, 'success');
+  } catch(e) {
+    console.warn('Engine config save failed (non-fatal):', e.message);
+    // Keep the UI change even if save fails
+  }
+}
+
+async function toggleAuto(enabled) {
+  scrapingConfig.auto_enabled = enabled;
+  try {
+    await saveScrapingConfig();
+    toast(enabled ? 'Auto-scraping enabled' : 'Auto-scraping paused', 'info');
+  } catch(e) {
+    console.warn('Auto toggle save failed:', e.message);
+  }
+}
+
+async function saveScrapingConfig() {
+  try {
+    await apiFetch('/scrape/config', { method: 'POST', body: JSON.stringify(scrapingConfig) });
+  } catch (e) { toast('Config save failed: ' + e.message, 'error'); }
+}
+
+async function scrapeNow() {
+  const btn = document.getElementById('scrape-now-btn');
+  btn.disabled = true; btn.innerHTML = '⏳ Scraping...';
+  try {
+    const result = await apiFetch('/scrape/now', { method: 'POST' });
+    toast(`Scraped ${result.scraped||0} targets · ${result.logs?.reduce((s,l)=>s+l.new_count,0)||0} new questions`, 'success');
+    if (currentTab === 'dashboard') loadDashboard();
+    if (currentTab === 'review-queue') loadReviewQueue();
+    checkHealth();
+  } catch (e) { toast('Scrape failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '⚡ Scrape Now'; }
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────
+async function loadDashboard() {
+  const el = document.getElementById('tab-dashboard');
+  el.innerHTML = skeletonDashboard();
+  try {
+    const dashVendor = document.getElementById('dash-vendor')?.value || '';
+    const { from: dashFrom, to: dashTo } = getDateRange(dashDateRange);
+    const dp = new URLSearchParams();
+    if (dashVendor) dp.append('vendor', dashVendor);
+    if (dashFrom)   dp.append('date_from', dashFrom);
+    if (dashTo)     dp.append('date_to', dashTo);
+    if (!document.getElementById('dash-datebtn')) { const dw=document.getElementById('dash-date-wrap'); if(dw) dw.innerHTML=buildDateBtn('dash'); }
+    const s = await apiFetch('/dashboard/stats' + (dp.toString() ? '?' + dp.toString() : ''));
+    Object.values(dashCharts).forEach(c => c.destroy());
+    dashCharts = {};
+
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+    el.innerHTML = `
+    <div class="welcome-banner">
+      <div class="welcome-text">
+        <h2>${greeting} — CQM Operations Dashboard</h2>
+        <p>Monitor customer questions, AI performance, and agent workload across BestBuy, Amazon and Target.</p>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn btn-white btn-sm" onclick="scrapeNow()">⚡ Scrape Now</button>
+        <button class="btn btn-white btn-sm" onclick="showTab('review-queue')">🔍 Review Queue ${s.review>0?`<span style="background:var(--danger);border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px">${s.review}</span>`:''}</button>
+      </div>
+    </div>
+
+    ${(currentRole==='admin'||currentRole==='manager') ? `
+    <div class="filters" style="margin-bottom:20px;background:var(--bg-secondary);padding:12px 16px;border-radius:10px;align-items:center">
+      <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">Filter:</span>
+      <select class="form-select" id="dash-vendor" onchange="loadDashboard()" style="width:160px">
+        <option value="">All Vendors</option>
+        <option value="bestbuy">BestBuy</option>
+        <option value="amazon">Amazon</option>
+        <option value="target">Target</option>
+      </select>
+      <div id="dash-date-wrap"></div>
+      <button class="btn btn-secondary btn-sm" onclick="clearDashFilters()">✕ Clear</button>
+    </div>
+    <div class="stat-grid" style="margin-bottom:20px">
+      <div class="stat-card primary"><div class="stat-icon">📊</div>
+        <div class="stat-value">${(s.total||0).toLocaleString()}</div>
+        <div class="stat-label">Total Q&amp;A</div>
+        <div class="stat-sub">${dashDateRange ? (document.getElementById('dash-datelbl')?.textContent||'All time') : 'All time'}</div></div>
+      <div class="stat-card success"><div class="stat-icon">📅</div>
+        <div class="stat-value">${s.total > 0 ? ((s.total||0)/Math.max(1, s.active_days||30)).toFixed(1) : '0'}</div>
+        <div class="stat-label">Q&amp;A per Day</div>
+        <div class="stat-sub">${(s.active_days||30)}-day period</div></div>
+      <div class="stat-card info"><div class="stat-icon">⏱️</div>
+        <div class="stat-value">${s.aht_mins ? s.aht_mins+' min' : (s.answered>0 ? '...' : 'N/A')}</div>
+        <div class="stat-label">AHT (mins)</div><div class="stat-sub">Avg handling time</div></div>
+      <div class="stat-card warning"><div class="stat-icon">📉</div>
+        <div class="stat-value">${s.aht_reduction||s.automation_rate||0}%</div>
+        <div class="stat-label">Reduction in AHT</div><div class="stat-sub">Auto-approved vs total</div></div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:24px">
+      <div class="stat-card success"><div class="stat-icon">👤</div>
+        <div class="stat-value">${Math.round((s.answered||0)*2/60).toLocaleString()}</div>
+        <div class="stat-label">Human Hours Saved</div><div class="stat-sub">Based on answered Q&amp;A</div></div>
+      <div class="stat-card primary"><div class="stat-icon">💰</div>
+        <div class="stat-value">$${Math.round((s.answered||0)*2/60*15).toLocaleString()}</div>
+        <div class="stat-label">$ Savings</div><div class="stat-sub">At $15/hr baseline</div></div>
+      <div class="stat-card info"><div class="stat-icon">👥</div>
+        <div class="stat-value">${((s.answered||0)*2/60/160).toFixed(2)}</div>
+        <div class="stat-label">FTE Savings</div><div class="stat-sub">Full time equivalent</div></div>
+      <div class="stat-card ${(s.automation_rate||0)>=70?'success':'warning'}"><div class="stat-icon">🚀</div>
+        <div class="stat-value">${s.automation_rate||0}%</div>
+        <div class="stat-label">Reduction in TAT</div><div class="stat-sub">Turn around time</div></div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px">
+    ` : ''}
+
+    <div class="stat-grid">
+      <div class="stat-card primary">
+        <div class="stat-icon">💬</div>
+        <div class="stat-value">${s.total||0}</div>
+        <div class="stat-label">Total Questions</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">${s.answered||0}</div>
+        <div class="stat-label">Answered</div>
+        <div class="stat-sub">${s.total>0?Math.round(s.answered/s.total*100):0}% of total</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-icon">🕐</div>
+        <div class="stat-value">${s.review||0}</div>
+        <div class="stat-label">In Review</div>
+        <div class="stat-sub">Needs attention</div>
+      </div>
+      <div class="stat-card info">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-value">${s.unanswered||0}</div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-sub">Awaiting processing</div>
+      </div>
+      <div class="stat-card primary">
+        <div class="stat-icon">🤖</div>
+        <div class="stat-value">${s.automation_rate||0}%</div>
+        <div class="stat-label">Automation Rate</div>
+        <div class="stat-sub">${s.auto_approved||0} auto-approved</div>
+      </div>
+      <div class="stat-card ${s.sla_breached>0?'danger':'success'}">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value">${s.sla_breached||0}</div>
+        <div class="stat-label">SLA Breaches</div>
+        <div class="stat-sub">&gt;24hrs pending</div>
+      </div>
+      <div class="stat-card info">
+        <div class="stat-icon">📚</div>
+        <div class="stat-value">${s.kb_entries||0}</div>
+        <div class="stat-label">KB Articles</div>
+        <div class="stat-sub">Knowledge base</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box"><h3>By Category</h3><canvas id="chart-category"></canvas></div>
+      <div class="chart-box"><h3>By Sentiment</h3><canvas id="chart-sentiment"></canvas></div>
+      <div class="chart-box"><h3>By Retailer</h3><canvas id="chart-retailer"></canvas></div>
+      <div class="chart-box"><h3>7-Day Trend</h3><canvas id="chart-trend"></canvas></div>
+    </div>`;
+
+    renderCharts(s);
+    const ddw = document.getElementById('dash-date-wrap');
+    if (ddw && !document.getElementById('dash-datebtn')) {
+      ddw.innerHTML = buildDateBtn('dash');
+      // Restore label if a range was already selected
+      if (dashDateRange) {
+        const ranges = [{v:'today',l:'Today'},{v:'7d',l:'Last 7 days'},{v:'30d',l:'Last 30 days'},{v:'month',l:'This month'},{v:'last_month',l:'Last month'}];
+        const found = ranges.find(function(r) { return r.v === dashDateRange; });
+        if (found) {
+          const lbl = document.getElementById('dash-datelbl'); if (lbl) lbl.textContent = found.l;
+          const btn = document.getElementById('dash-datebtn'); if (btn) btn.classList.add('active');
+          const menu = document.getElementById('dash-datemenu');
+          if (menu) menu.querySelectorAll('a').forEach(function(a) { a.classList.toggle('selected', a.dataset.val === dashDateRange); });
+        }
+      }
+    }
+  } catch (e) {
+    el.innerHTML = emptyState('📊', 'Dashboard unavailable', `Could not load stats: ${e.message}`, 'Check Configuration', "showTab('config')");
+  }
+}
+
+
+function clearDashFilters() {
+  dashDateRange = '';
+  const v = document.getElementById('dash-vendor'); if (v) v.value = '';
+  resetDateBtn('dash');
+  loadDashboard();
+}
+
+function skeletonDashboard() {
+  return `<div class="stat-grid">${Array(7).fill(0).map(()=>`
+    <div class="stat-card"><div class="skeleton" style="width:40px;height:40px;border-radius:10px;margin-bottom:14px"></div>
+    <div class="skeleton" style="width:60px;height:30px;margin-bottom:8px"></div>
+    <div class="skeleton" style="width:100px;height:12px"></div></div>`).join('')}</div>
+    <div class="chart-grid">${Array(4).fill(0).map(()=>`
+    <div class="chart-box"><div class="skeleton" style="width:120px;height:13px;margin-bottom:16px"></div>
+    <div class="skeleton" style="width:100%;height:200px;border-radius:8px"></div></div>`).join('')}</div>`;
+}
+
+function renderCharts(s) {
+  const COLORS = ['#0176D3','#2E844A','#DD7A01','#EA001E','#7C3AED','#0891B2','#DB2777','#65A30D'];
+  const isDark = localStorage.getItem('cqm_theme') === 'dark';
+  const legendColor = isDark ? '#8892A4' : '#5F6A7D';
+  const gridColor = isDark ? '#2A3042' : '#E8ECF2';
+
+  const doughnutCfg = (labels, data) => ({
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: COLORS.slice(0,labels.length), borderWidth: 2, borderColor: isDark ? '#1E2330' : '#fff' }] },
+    options: { responsive:true, maintainAspectRatio:true, cutout:'65%',
+      plugins: { legend: { position:'right', labels:{ color:legendColor, font:{size:11}, boxWidth:12, padding:8 } } } }
+  });
+
+  const catLabels = Object.keys(s.by_category||{});
+  if (catLabels.length) dashCharts.cat = new Chart(document.getElementById('chart-category'), doughnutCfg(catLabels, catLabels.map(k=>s.by_category[k])));
+
+  const sentLabels = Object.keys(s.by_sentiment||{});
+  if (sentLabels.length) dashCharts.sent = new Chart(document.getElementById('chart-sentiment'), doughnutCfg(sentLabels, sentLabels.map(k=>s.by_sentiment[k])));
+
+  const retLabels = Object.keys(s.by_retailer||{});
+  if (retLabels.length) dashCharts.ret = new Chart(document.getElementById('chart-retailer'), doughnutCfg(retLabels, retLabels.map(k=>s.by_retailer[k])));
+
+  const trend = s.trend || [];
+  if (trend.length) {
+    dashCharts.trend = new Chart(document.getElementById('chart-trend'), {
+      type: 'line',
+      data: { labels: trend.map(d=>d.date),
+        datasets: [
+          { label:'Total', data:trend.map(d=>d.total), borderColor:'#0176D3', backgroundColor:'rgba(1,118,211,.08)', fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#0176D3' },
+          { label:'Answered', data:trend.map(d=>d.answered), borderColor:'#2E844A', backgroundColor:'rgba(46,132,74,.08)', fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#2E844A' }
+        ]
+      },
+      options: { responsive:true, maintainAspectRatio:true,
+        plugins: { legend: { labels:{ color:legendColor, font:{size:11} } } },
+        scales: {
+          x: { ticks:{ color:legendColor, font:{size:10} }, grid:{ color:gridColor } },
+          y: { ticks:{ color:legendColor, font:{size:10} }, grid:{ color:gridColor } }
+        }
+      }
+    });
+  }
+}
+
+// ── SCRAPE TARGETS ─────────────────────────────────────────────────
+async function loadScrapeTargets() {
+  const el = document.getElementById('tab-scrape-targets');
+  el.innerHTML = `
+  <div class="page-header">
+    <div class="breadcrumb">🏠<span>/</span>Scrape Targets</div>
+    <h1>Scrape Targets</h1>
+    <p>Manage product URLs for BestBuy and Amazon scraping. Upload an Excel file to add products.</p>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div class="filters" style="margin:0">
+      <input class="form-input" id="st-search" placeholder="🔍 Search targets..." oninput="filterTargets()" style="width:200px">
+      <select class="form-select" id="st-retailer" onchange="filterTargets()">
+        <option value="">All Retailers</option><option value="bestbuy">BestBuy</option><option value="amazon">Amazon</option><option value="target">Target</option>
+      </select>
+      <select class="form-select" id="st-status" onchange="filterTargets()">
+        <option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <div class="flex gap-2">
+      <a href="${API}/scrape-targets/template" class="btn btn-secondary btn-sm">⬇️ Template</a>
+      <button class="btn btn-primary btn-sm" onclick="showUploadForm()">⬆️ Upload Excel</button>
+    </div>
+  </div>
+  <div id="upload-area"></div>
+  <div class="card" id="targets-card"><div class="loading">⏳ Loading targets...</div></div>`;
+  await refreshTargets();
+}
+
+function showUploadForm() {
+  const area = document.getElementById('upload-area');
+  area.innerHTML = `
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">📊 Upload Product URLs</div>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('excel-file').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleDrop(event)">
+      <div class="upload-icon">☁️</div>
+      <p>Click or drag an Excel file here</p>
+      <div class="upload-hint">Required columns: retailer (bestbuy/amazon/target), product_name, url, active</div>
+    </div>
+    <input type="file" id="excel-file" accept=".xlsx,.xls" style="display:none" onchange="uploadExcel(this.files[0])">
+    <button class="btn btn-secondary btn-sm" style="margin-top:14px" onclick="document.getElementById('upload-area').innerHTML=''">
+      ✕ Cancel
+    </button>
+  </div>`;
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) uploadExcel(file);
+}
+
+async function uploadExcel(file) {
+  if (!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch(`${API}/scrape-targets/upload`, { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toast(`${data.inserted} targets uploaded successfully`, 'success');
+    document.getElementById('upload-area').innerHTML = '';
+    await refreshTargets();
+  } catch (e) { toast('Upload failed: ' + e.message, 'error'); }
+}
+
+async function refreshTargets() {
+  const card = document.getElementById('targets-card');
+  if (!card) return;
+  try {
+    const targets = await apiFetch('/scrape-targets');
+    if (!targets.length) {
+      card.innerHTML = emptyState('🎯', 'No scrape targets yet', 'Upload an Excel file with product URLs to start scraping BestBuy and Amazon.', 'Upload Excel', 'showUploadForm()');
+      return;
+    }
+    card.innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Retailer / Product</th><th>Product</th><th>URL</th><th>Status</th>
+        <th>Last Scraped</th><th>Questions Found</th><th>Active</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="targets-tbody">${targets.map(t=>`
+        <tr data-retailer="${t.retailer}" data-active="${t.is_active}">
+          <td><span class="badge-pill ${t.retailer==='bestbuy'?'badge-blue':'badge-orange'}">🏪 ${t.retailer}</span></td>
+          <td><div class="truncate" style="max-width:200px;font-weight:500">${t.product_name}</div></td>
+          <td><button onclick="openRetailerUrl(this.dataset.url)" data-url="${t.url}" style="background:none;border:none;color:var(--primary);font-size:12px;cursor:pointer;padding:0;text-decoration:underline">↗ View</button></td>
+          <td><span class="badge-pill ${t.is_active?'badge-green':'badge-gray'}">${t.is_active?'Active':'Inactive'}</span></td>
+          <td style="color:var(--text-muted);font-size:12px">${t.last_scraped_at?new Date(t.last_scraped_at).toLocaleString():'Never'}</td>
+          <td style="font-weight:600">${t.questions_found_total||0}</td>
+          <td><label class="toggle-switch"><input type="checkbox" ${t.is_active?'checked':''} onchange="toggleTarget('${t.id}',this.checked)"><span class="toggle-slider"></span></label></td>
+          <td><div class="flex gap-2">
+            <button class="btn btn-secondary btn-xs" onclick="scrapeTarget('${t.id}')">⚡ Now</button>
+            <button class="btn btn-danger btn-xs" onclick="deleteTarget('${t.id}')">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  } catch (e) { card.innerHTML = emptyState('⚠️', 'Error loading targets', e.message); }
+}
+
+async function toggleTarget(id, active) {
+  try {
+    await apiFetch(`/scrape-targets/${id}`, { method:'PATCH', body: JSON.stringify({ is_active: active }) });
+    toast(`Target ${active ? 'activated' : 'deactivated'}`, 'success');
+  } catch(e) {
+    toast('Failed to update target: ' + e.message, 'error');
+    await refreshTargets(); // Revert toggle in UI
+  }
+}
+
+async function deleteTarget(id) {
+  if (!confirm('Delete this scrape target? It will no longer be scraped.')) return;
+  try {
+    await apiFetch('/scrape-targets/' + id, { method:'DELETE' });
+    toast('Scrape target deleted', 'success');
+    await refreshTargets();
+  } catch(e) { toast('Delete failed: ' + e.message, 'error'); }
+}
+
+async function scrapeTarget(id) {
+  try {
+    const log = await apiFetch(`/scrape/target/${id}`, { method:'POST' });
+    toast(`Found ${log.found_count} questions · ${log.new_count} new`, log.error?'error':'success');
+    await refreshTargets();
+  } catch (e) { toast(e.message,'error'); }
+}
+
+// ── REVIEW QUEUE ───────────────────────────────────────────────────
+async function loadReviewQueue(page = 1) {
+  reviewPage = page;
+  const el = document.getElementById('tab-review-queue');
+  const prev = filterState.rq || {};
+  // Preserve filter values
+  const curR = document.getElementById('rq-retailer')?.value  || prev.retailer  || '';
+  const curC = document.getElementById('rq-category')?.value  || prev.category  || '';
+  const curS = document.getElementById('rq-sentiment')?.value || prev.sentiment || '';
+  filterState.rq = { retailer: curR, category: curC, sentiment: curS, date_from: prev.date_from || '', date_to: prev.date_to || '' };
+
+  if (!document.getElementById('review-table-card')) {
+    el.innerHTML = `
+    <div class="page-header">
+      <div class="breadcrumb">🏠<span>/</span>Review Queue</div>
+      <h1>Review Queue</h1>
+    </div>
+    <div class="filters" id="rq-filter-bar">
+      <select class="form-select" id="rq-retailer" onchange="applyRQFilters()">
+        <option value="">All Retailers</option><option value="bestbuy">BestBuy</option><option value="amazon">Amazon</option><option value="target">Target</option>
+      </select>
+      <select class="form-select" id="rq-category" onchange="applyRQFilters()">
+        <option value="">All Categories</option>
+        ${["product_info","pricing","warranty","compatibility","usage","complaints","returns","other"].map(c=>'<option value="'+c+'">'+c+'</option>').join('')}
+      </select>
+      <select class="form-select" id="rq-sentiment" onchange="applyRQFilters()">
+        <option value="">All Sentiments</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option>
+      </select>
+      <div id="rq-date-wrap"></div>
+      <button class="btn btn-secondary btn-sm" onclick="clearRQFilters()">✕ Clear</button>
+    </div>
+    <div class="card" id="review-table-card"><div class="loading">Loading...</div></div>`;
+    document.getElementById('rq-date-wrap').innerHTML = buildDateBtn('rq');
+    if (rqDateRange) {
+      const ranges = [{v:'today',l:'Today'},{v:'7d',l:'Last 7 days'},{v:'30d',l:'Last 30 days'},{v:'month',l:'This month'},{v:'last_month',l:'Last month'}];
+      const found = ranges.find(function(r) { return r.v === rqDateRange; });
+      if (found) {
+        const lbl = document.getElementById('rq-datelbl'); if (lbl) lbl.textContent = found.l;
+        const btn = document.getElementById('rq-datebtn'); if (btn) btn.classList.add('active');
+        const menu = document.getElementById('rq-datemenu');
+        if (menu) menu.querySelectorAll('a').forEach(function(a) { a.classList.toggle('selected', a.dataset.val === rqDateRange); });
+      }
+    }
+  }
+  const retEl = document.getElementById('rq-retailer'); if (retEl && curR) retEl.value = curR;
+  const catEl = document.getElementById('rq-category'); if (catEl && curC) catEl.value = curC;
+  const senEl = document.getElementById('rq-sentiment'); if (senEl && curS) senEl.value = curS;
+  await refreshReviewQueue();
+}
+
+function applyRQFilters() {
+  const { from, to } = getDateRange(rqDateRange);
+  filterState.rq = {
+    retailer:  document.getElementById('rq-retailer')?.value  || '',
+    category:  document.getElementById('rq-category')?.value  || '',
+    sentiment: document.getElementById('rq-sentiment')?.value || '',
+    date_from: from, date_to: to
+  };
+  reviewPage = 1; refreshReviewQueue();
+}
+
+function clearRQFilters() {
+  filterState.rq = {}; rqDateRange = '';
+  ['rq-retailer','rq-category','rq-sentiment'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+  resetDateBtn('rq'); reviewPage = 1; refreshReviewQueue();
+}
+
+
+async function refreshReviewQueue() {
+  const card = document.getElementById('review-table-card');
+  if (!card) return;
+  try {
+    const retailer  = filterState.rq.retailer || '';
+    const category  = filterState.rq.category || '';
+    const sentiment = filterState.rq.sentiment || '';
+    const agentFilter = getAgentFilter();
+
+    const params = new URLSearchParams({ status: 'review', page: reviewPage, limit: 15 });
+    if (retailer)    params.append('retailer', retailer);
+    if (category)    params.append('category', category);
+    if (sentiment)   params.append('sentiment', sentiment);
+    if (agentFilter) params.append('assigned_to', agentFilter);
+    if (filterState.rq?.date_from) params.append('date_from', filterState.rq.date_from);
+    if (filterState.rq?.date_to)   params.append('date_to', filterState.rq.date_to);
+    const url = '/questions?' + params.toString();
+
+    const { data, total } = await apiFetch(url);
+    updateReviewBadge(total);
+
+    if (!data?.length) {
+      card.innerHTML = emptyState('📥', 'Review queue is empty', 'All questions have been processed. Great work!');
+      return;
+    }
+
+    card.innerHTML = `
+    <div class="table-wrap"><table id="review-table" style="table-layout:fixed;width:100%;font-size:12px">
+      <thead><tr>
+        <th style="width:85px;font-size:11px">Date</th>
+        <th style="width:120px;font-size:11px">Retailer / Product</th>
+        <th style="font-size:11px">Question</th>
+        <th style="width:95px;font-size:11px">Category</th>
+        <th style="width:75px;font-size:11px">Sentiment</th>
+        <th style="width:85px;font-size:11px">Confidence</th>
+        <th style="width:95px;font-size:11px">Assigned To</th>
+        <th style="width:110px;font-size:11px">Reason</th>
+        <th style="width:80px;font-size:11px">Actions</th>
+      </tr></thead>
+      <tbody>
+      ${data.map(q=>`
+        <tr id="row-${q.id}">
+          <td style="white-space:nowrap;color:var(--text-muted);font-size:12px">${q.date_asked?new Date(q.date_asked).toLocaleDateString():new Date(q.created_at).toLocaleDateString()}</td>
+          <td style="max-width:0">${q.product_url ? '<a href="'+q.product_url+'" target="_blank" rel="noreferrer" style="text-decoration:none">'+retailerBadge(q.retailer)+'</a><div style="font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px" title="'+(q.product_name||'')+'">'+(q.product_name||'').substring(0,28)+'</div>' : retailerBadge(q.retailer)}</td>
+          <td style="max-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${q.question_text}</div></td>
+          <td>${catBadge(q.category)}</td>
+          <td>${sentBadge(q.sentiment)}</td>
+          <td>${confidenceBadge(q.confidence)}</td>
+          <td style="font-size:12px;color:var(--text-secondary)">${q.assigned_to||'—'}</td>
+          <td style="max-width:150px;font-size:11px;color:var(--text-muted)">${q.review_reason||'—'}</td>
+          <td><button class="btn btn-secondary btn-xs" onclick="toggleExpand('${q.id}')">▼ Expand</button></td>
+        </tr>
+        <tr class="expand-row" id="expand-${q.id}">
+          <td colspan="9">
+            <div class="expand-panel">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+                <div>
+                  <h4>❓ Full Question</h4>
+                  <p style="margin-top:6px;line-height:1.6">${q.question_text}</p>
+                  ${q.existing_answer?`<h4 style="margin-top:14px">🏪 Existing Retailer Answer</h4><p style="margin-top:6px;color:var(--text-muted);line-height:1.6">${q.existing_answer}</p>`:''}
+                </div>
+                <div>
+                  <h4>🤖 AI Draft Answer <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--text-muted)">(editable)</span></h4>
+                  <textarea class="form-textarea" id="draft-${q.id}" style="margin-top:6px;min-height:120px">${q.ai_answer||''}</textarea>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button class="btn btn-secondary btn-sm" onclick="saveDraft('${q.id}')" title="Save edits without approving — return later to approve">💾 Save Draft</button>
+                <button class="btn btn-success btn-sm" onclick="approveQuestion('${q.id}',false)">✓ Approve</button>
+                <button class="btn btn-primary btn-sm" onclick="approveQuestion('${q.id}',true)">✓✓ Approve + Add to KB</button>
+                <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                  <select class="form-select" id="assign-${q.id}" style="width:auto;padding:6px 10px;font-size:12px">
+                    ${agentOptions("")}
+                  </select>
+                  <button class="btn btn-secondary btn-sm" onclick="reassign('${q.id}')">🔄 Reassign</button>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+    ${pagination(total, reviewPage, 15, 'loadReviewQueue')}`;
+  } catch (e) { card.innerHTML = emptyState('⚠️', 'Error', e.message); }
+}
+
+function getAgentFilter() {
+  // Agents only see their own assigned questions
+  if (currentRole === 'agent_alex')  return 'Alex Agent';
+  if (currentRole === 'agent_jamie') return 'Jamie Agent';
+  // Manager sees all, Admin sees all
+  return '';
+}
+
+function canPerformAction(action) {
+  // Define what each role can do
+  const permissions = {
+    admin:       ['scrape','config','delete','approve','assign','post','kb_edit','agent_manage'],
+    manager:     ['approve','assign','kb_edit'],
+    agent_alex:  ['approve'],
+    agent_jamie: ['approve'],
+  };
+  const allowed = permissions[currentRole] || permissions.admin;
+  return allowed.includes(action);
+}
+
+function buildReviewActions(id) {
+  const isAgent = currentRole.startsWith('agent');
+  const isManager = currentRole === 'manager';
+  const isAdmin = currentRole === 'admin';
+
+  let html = '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+  html += `<button class="btn btn-secondary btn-sm" onclick="saveDraft('${id}')">💾 Save Draft</button>`;
+  html += `<button class="btn btn-success btn-sm" onclick="approveQuestion('${id}',false)">✓ Approve</button>`;
+  html += `<button class="btn btn-primary btn-sm" onclick="approveQuestion('${id}',true)">✓✓ Approve + Add to KB</button>`;
+
+  // Only Admin and Manager can reassign
+  if (isAdmin || isManager) {
+    html += '<div style="margin-left:auto;display:flex;gap:8px;align-items:center">';
+    html += `<select class="form-select" id="assign-${id}" style="width:auto;padding:6px 10px;font-size:12px">`;
+    html += '<option value="">Reassign to...</option>';
+    html += '<option value="Alex Agent">Alex Agent</option>';
+    html += '<option value="Jamie Agent">Jamie Agent</option>';
+    html += '<option value="Sarah Manager">Sarah Manager</option>';
+    html += '</select>';
+    html += `<button class="btn btn-secondary btn-sm" onclick="reassign('${id}')">↻ Reassign</button>`;
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function toggleExpand(id) {
+  const row = document.getElementById(`expand-${id}`);
+  row.classList.toggle('open');
+  const btn = row.previousElementSibling.querySelector(`button`);
+  if (btn) btn.innerHTML = row.classList.contains('open')
+    ? '▲ Collapse'
+    : '▼ Expand';
+}
+
+async function saveDraft(id) {
+  const answer = document.getElementById(`draft-${id}`)?.value;
+  if (answer === undefined) return toast('Draft field not found', 'error');
+  try {
+    await apiFetch(`/questions/${id}/draft`, { method:'PATCH', body: JSON.stringify({ answer }) });
+    toast('Draft saved','success');
+  } catch(e) { toast('Save draft failed: ' + e.message, 'error'); }
+}
+
+async function approveQuestion(id, addToKB) {
+  const answer = document.getElementById(`draft-${id}`)?.value;
+  try {
+    await apiFetch(`/questions/${id}/approve`, { method:'PATCH', body: JSON.stringify({ answer, add_to_kb: addToKB }) });
+    toast(addToKB ? 'Approved & added to Knowledge Base' : 'Answer approved successfully', 'success');
+    document.getElementById(`row-${id}`)?.remove();
+    document.getElementById(`expand-${id}`)?.remove();
+    try { checkHealth(); } catch(e) {}
+    // Refresh badge count
+    try { const {total} = await apiFetch('/questions?status=review&limit=1'); updateReviewBadge(total||0); } catch(e) {}
+  } catch(e) { toast('Approval failed: ' + e.message, 'error'); }
+}
+
+async function reassign(id) {
+  const agent = document.getElementById('assign-' + id)?.value;
+  if (!agent) return toast('Please select an agent to reassign to', 'error');
+  try {
+    await apiFetch('/questions/' + id + '/assign', { method:'PATCH', body: JSON.stringify({ assigned_to: agent }) });
+    toast('Reassigned to ' + agent, 'success');
+    await refreshReviewQueue();
+  } catch(e) { toast('Reassign failed: ' + e.message, 'error'); }
+}
+
+// ── ANSWER QUEUE ───────────────────────────────────────────────────
+async function loadAnswerQueue(page = 1) {
+  answerPage = page;
+  const el = document.getElementById('tab-answer-queue');
+  el.innerHTML = `
+  <div class="page-header">
+    <div class="breadcrumb">🏠<span>/</span>Answered Questions</div>
+    <h1>Answered Questions</h1>
+    <p>Complete audit trail of all answered customer questions.</p>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div class="filters" style="margin:0">
+      <select class="form-select" id="aq-retailer" onchange="applyAQFilters()">
+        <option value="">All Retailers</option><option value="bestbuy">BestBuy</option><option value="amazon">Amazon</option><option value="target">Target</option>
+      </select>
+      <select class="form-select" id="aq-category" onchange="applyAQFilters()">
+        <option value="">All Categories</option>
+        ${['product_info','pricing','warranty','compatibility','usage','complaints','returns','other'].map(c=>`<option value="${c}">${c}</option>`).join('')}
+      </select>
+    </div>
+    <a href="${API}/questions/export/csv" class="btn btn-secondary btn-sm">⬇️ Export</a>
+  </div>
+  <div class="card" id="answer-table-card"><div class="loading">⏳ Loading...</div></div>`;
+  if (document.getElementById('aq-date-wrap') && !document.getElementById('aq-datebtn')) {
+    document.getElementById('aq-date-wrap').innerHTML = buildDateBtn('aq');
+    if (aqDateRange) {
+      const ranges = [{v:'today',l:'Today'},{v:'7d',l:'Last 7 days'},{v:'30d',l:'Last 30 days'},{v:'month',l:'This month'},{v:'last_month',l:'Last month'}];
+      const found = ranges.find(function(r) { return r.v === aqDateRange; });
+      if (found) {
+        const lbl = document.getElementById('aq-datelbl'); if (lbl) lbl.textContent = found.l;
+        const btn = document.getElementById('aq-datebtn'); if (btn) btn.classList.add('active');
+        const menu = document.getElementById('aq-datemenu');
+        if (menu) menu.querySelectorAll('a').forEach(function(a) { a.classList.toggle('selected', a.dataset.val === aqDateRange); });
+      }
+    }
+  }
+  await refreshAnswerQueue();
+}
+
+function buildDateBtn(prefix) {
+  var id  = prefix + '-datemenu';
+  var lid = prefix + '-datelbl';
+  var ranges = [
+    {v:'',          l:'All time'},
+    {v:'today',     l:'Today'},
+    {v:'7d',        l:'Last 7 days'},
+    {v:'30d',       l:'Last 30 days'},
+    {v:'month',     l:'This month'},
+    {v:'last_month',l:'Last month'}
+  ];
+  // Use data-prefix and data-val attributes — avoids ALL quote escaping issues
+  var items = ranges.map(function(r) {
+    return '<a class="dr-item" data-prefix="' + prefix + '" data-val="' + r.v + '" data-lbl="' + r.l + '" style="display:block;padding:10px 16px;cursor:pointer" onclick="drPick(this)">' + r.l + '</a>';
+  }).join('');
+  return '<div style="position:relative">' +
+    '<button class="date-range-btn" id="' + prefix + '-datebtn" data-menu="' + id + '" onclick="drToggle(this)" type="button">' +
+    '📅 <span id="' + lid + '">All time</span> ▾</button>' +
+    '<div class="date-range-menu" id="' + id + '">' + items + '</div>' +
+    '</div>';
+}
+
+function drToggle(btn) {
+  var menu = document.getElementById(btn.dataset.menu);
+  if (!menu) return;
+  menu.classList.toggle('open');
+  if (menu.classList.contains('open')) {
+    setTimeout(function() {
+      document.addEventListener('click', function handler(e) {
+        if (!menu.parentElement.contains(e.target)) {
+          menu.classList.remove('open');
+          document.removeEventListener('click', handler);
+        }
+      });
+    }, 10);
+  }
+}
+
+function drPick(el) {
+  var prefix = el.dataset.prefix;
+  var val    = el.dataset.val;
+  var lbl    = el.dataset.lbl;
+  pickDR(prefix, val, lbl);
+}
+
+function toggleDR(id) {
+  const m = document.getElementById(id); if (!m) return;
+  m.classList.toggle('open');
+  if (m.classList.contains('open')) {
+    setTimeout(function() {
+      document.addEventListener('click', function handler(e) {
+        if (!m.parentElement.contains(e.target)) { m.classList.remove('open'); document.removeEventListener('click', handler); }
+      });
+    }, 10);
+  }
+}
+
+function resetDateBtn(prefix) {
+  const lbl = document.getElementById(prefix + '-datelbl'); if (lbl) lbl.textContent = 'All time';
+  const btn = document.getElementById(prefix + '-datebtn'); if (btn) btn.classList.remove('active');
+  const menu = document.getElementById(prefix + '-datemenu'); if (menu) menu.querySelectorAll('a').forEach(function(a) { a.classList.remove('selected'); });
+}
+
+function pickDR(prefix, val, label) {
+  const { from, to } = getDateRange(val);
+  const lbl = document.getElementById(prefix + '-datelbl'); if (lbl) lbl.textContent = label;
+  const btn = document.getElementById(prefix + '-datebtn'); if (btn) btn.classList.toggle('active', !!val);
+  const menu = document.getElementById(prefix + '-datemenu');
+  if (menu) { menu.querySelectorAll('a').forEach(function(a) { a.classList.toggle('selected', a.textContent === label); }); menu.classList.remove('open'); }
+  if (prefix === 'rq') { rqDateRange = val; filterState.rq = filterState.rq || {}; filterState.rq.date_from = from; filterState.rq.date_to = to; reviewPage = 1; refreshReviewQueue(); }
+  if (prefix === 'aq') { aqDateRange = val; filterState.aq = filterState.aq || {}; filterState.aq.date_from = from; filterState.aq.date_to = to; answerPage = 1; refreshAnswerQueue(); }
+  if (prefix === 'dash') { dashDateRange = val; loadDashboard(); }
+}
+
+function getDateRange(v) {
+  const now = new Date(); const p = function(n) { return String(n).padStart(2,'0'); };
+  const fmt = function(d) { return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); };
+  const today = fmt(now);
+  if (!v) return { from:'', to:'' };
+  if (v==='today') return { from:today, to:today };
+  if (v==='7d')  { const d=new Date(now); d.setDate(d.getDate()-7);  return { from:fmt(d), to:today }; }
+  if (v==='30d') { const d=new Date(now); d.setDate(d.getDate()-30); return { from:fmt(d), to:today }; }
+  if (v==='month') return { from:now.getFullYear()+'-'+p(now.getMonth()+1)+'-01', to:today };
+  if (v==='last_month') { const f=new Date(now.getFullYear(),now.getMonth()-1,1); const l=new Date(now.getFullYear(),now.getMonth(),0); return { from:fmt(f), to:fmt(l) }; }
+  return { from:'', to:'' };
+}
+
+function applyAQFilters() {
+  const { from, to } = getDateRange(aqDateRange);
+  filterState.aq = { retailer: document.getElementById('aq-retailer')?.value || '', category: document.getElementById('aq-category')?.value || '', date_from: from, date_to: to };
+  answerPage = 1; refreshAnswerQueue();
+}
+
+function clearAQFilters() {
+  filterState.aq = {}; aqDateRange = '';
+  ['aq-retailer','aq-category'].forEach(function(id) { const e=document.getElementById(id); if(e) e.value=''; });
+  resetDateBtn('aq'); answerPage = 1; refreshAnswerQueue();
+}
+
+
+async function refreshAnswerQueue() {
+  const card = document.getElementById('answer-table-card');
+  if (!card) return;
+  try {
+    const retailer = filterState.aq?.retailer || '';
+    const category = filterState.aq?.category || '';
+    const params = new URLSearchParams({ status: 'answered', page: answerPage, limit: 20 });
+    if (retailer)                  params.append('retailer', retailer);
+    if (category)                  params.append('category', category);
+    if (filterState.aq?.date_from) params.append('date_from', filterState.aq.date_from);
+    if (filterState.aq?.date_to)   params.append('date_to',   filterState.aq.date_to);
+    const url = '/questions?' + params.toString();
+
+    const { data, total } = await apiFetch(url);
+    if (!data?.length) { card.innerHTML = emptyState('✅', 'No answered questions yet', 'Questions will appear here once approved.'); return; }
+
+    card.innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Date / Customer</th><th>Date Answered</th><th>Retailer / Product</th><th>Question</th>
+        <th>Category</th><th>Sentiment</th><th>Confidence</th><th>Assigned To</th>
+      </tr></thead>
+      <tbody>${data.map(q=>`
+        <tr>
+          <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">${q.date_asked?new Date(q.date_asked).toLocaleDateString():'—'}</td>
+          <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">${q.date_answered?new Date(q.date_answered).toLocaleDateString():'—'}</td>
+          <td style="max-width:0">${q.product_url ? '<a href="'+q.product_url+'" target="_blank" rel="noreferrer" style="text-decoration:none">'+retailerBadge(q.retailer)+'</a><div style="font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px" title="'+(q.product_name||'')+'">'+(q.product_name||'').substring(0,28)+'</div>' : retailerBadge(q.retailer)}</td>
+          <td style="max-width:320px">
+            <div style="font-weight:500;font-size:13px;margin-bottom:4px">${q.question_text}</div>
+            ${q.ai_answer ? '<div style="font-size:11px;color:var(--text-muted);line-height:1.4;border-left:2px solid var(--primary);padding-left:6px;margin-top:4px">'+q.ai_answer.substring(0,120)+(q.ai_answer.length>120?'...':'')+'</div>' : '<div style="font-size:11px;color:var(--text-muted);font-style:italic">No answer yet</div>'}
+          </td>
+          <td>${catBadge(q.category)}</td>
+          <td>${sentBadge(q.sentiment)}</td>
+          <td>${confidenceBadge(q.confidence)}</td>
+          <td style="font-size:12px;color:var(--text-secondary)">${q.assigned_to||'Auto'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+    ${pagination(total, answerPage, 20, 'loadAnswerQueue')}`;
+  } catch (e) { card.innerHTML = emptyState('⚠️', 'Error', e.message); }
+}
+
+// ── KNOWLEDGE BASE ─────────────────────────────────────────────────
+async function loadKB(page = 1) {
+  const el = document.getElementById('tab-knowledge-base');
+  el.innerHTML = `
+  <div class="page-header">
+    <div class="breadcrumb">🏠<span>/</span>Knowledge Base</div>
+    <h1>Knowledge Base</h1>
+    <p>Centralized repository of product specs, manuals, FAQs, and approved responses.</p>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" id="kb-tab-list" onclick="switchKBTab('list')">KB Entries</button>
+    <button class="tab-btn" id="kb-tab-docs" onclick="switchKBTab('docs')">📄 Documents</button>
+    <button class="tab-btn" id="kb-tab-pdf" onclick="switchKBTab('pdf')">Upload PDF Manual</button>
+  </div>
+  <div id="kb-list-section"></div>
+  <div id="kb-docs-section" style="display:none"></div>
+  <div id="kb-pdf-section" style="display:none"></div>`;
+  renderKBList(page);
+  renderKBDocs();
+  renderKBPDF();
+}
+
+function switchKBTab(tab) {
+  ['list','docs','pdf'].forEach(t => {
+    document.getElementById('kb-tab-' + t)?.classList.toggle('active', t===tab);
+    const el = document.getElementById('kb-' + t + '-section');
+    if (el) el.style.display = t===tab ? '' : 'none';
+  });
+  if (tab === 'docs') renderKBDocs();
+}
+
+async function renderKBList(page = 1) {
+  const el = document.getElementById('kb-list-section');
+  el.innerHTML = `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div class="filters" style="margin:0">
+      <div style="position:relative">
+        
+        <input class="form-input" id="kb-search" placeholder="Search knowledge base..." oninput="refreshKBList(1)" style="padding-left:30px;width:240px;padding-top:7px;padding-bottom:7px">
+      </div>
+      <select class="form-select" id="kb-cat" onchange="refreshKBList(1)">
+        <option value="">All Categories</option>
+        ${['product_info','pricing','warranty','compatibility','usage','complaints','returns','other'].map(c=>`<option value="${c}">${c}</option>`).join('')}
+      </select>
+      <select class="form-select" id="kb-src" onchange="refreshKBList(1)">
+        <option value="">All Sources</option>
+        <option value="manual">Manual</option><option value="pdf_manual">PDF Manual</option>
+        <option value="approved_answer">Approved Answer</option><option value="product_spec">Product Spec</option>
+      </select>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="backfillEmbeddings()">🔄 Rebuild KB Search Index</button>
+  </div>
+  <div class="card" id="kb-table-card"><div class="loading">⏳ Loading...</div></div>`;
+  await refreshKBList(page);
+}
+
+async function refreshKBList(page = 1) {
+  const card = document.getElementById('kb-table-card');
+  if (!card) return;
+  const search = document.getElementById('kb-search')?.value || '';
+  const cat    = document.getElementById('kb-cat')?.value || '';
+  const src    = document.getElementById('kb-src')?.value || '';
+  const params = new URLSearchParams({ page, limit: 15 });
+  if (search) params.append('search', search);
+  if (cat)    params.append('category', cat);
+  if (src)    params.append('source', src);
+  const url = '/knowledge-base?' + params.toString();
+  try {
+    const { data, total } = await apiFetch(url);
+    if (!data?.length) { card.innerHTML = emptyState('📚', 'No KB entries', 'Upload a PDF manual or approve questions from the Review Queue to build your knowledge base.', 'Upload PDF', "switchKBTab('pdf')"); return; }
+    card.innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Title</th><th>Category</th><th>Source</th><th>Date Added</th><th>Actions</th></tr></thead>
+      <tbody>${data.map(e=>`
+        <tr>
+          <td><div style="font-weight:600;margin-bottom:2px">${e.title||'Untitled'}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${(e.content||'').slice(0,90)}...</div></td>
+          <td>${catBadge(e.category)}</td>
+          <td><span class="badge-pill badge-gray">${e.source||'manual'}</span>${e.has_pdf?` <span class="badge-pill badge-blue">📄 PDF</span>`:''}</td>
+          <td style="font-size:12px;color:var(--text-muted)">${e.created_at?new Date(e.created_at).toLocaleDateString():'—'}</td>
+          <td><div class="flex gap-2">
+            ${e.has_pdf&&e.pdf_filename?`<button class="btn btn-secondary btn-xs" onclick="previewPDF('${e.pdf_filename}',null)">👁 PDF</button>`:''}
+            <button class="btn btn-danger btn-xs" onclick="deleteKB('${e.id}')">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+    ${pagination(total, page, 15, 'refreshKBList')}`;
+  } catch (e) { card.innerHTML = emptyState('⚠️','Error',e.message); }
+}
+
+
+
+async function renderKBDocs() {
+  const el = document.getElementById('kb-docs-section');
+  if (!el) return;
+  el.innerHTML = '<div class="loading">⏳ Loading documents...</div>';
+
+  try {
+    // Get all PDF-sourced KB entries and group by filename
+    const { data, total } = await apiFetch('/knowledge-base?source=pdf_manual&limit=100');
+
+    if (!data?.length) {
+      el.innerHTML = emptyState('📄', 'No documents uploaded yet', 'Upload a PDF manual to add it to the knowledge base.', 'Upload PDF', "switchKBTab('pdf')");
+      return;
+    }
+
+    // Group chunks by pdf_filename to show one entry per document
+    const docs = {};
+    data.forEach(e => {
+      const fname = e.pdf_filename || 'unknown';
+      if (!docs[fname]) {
+        docs[fname] = {
+          filename: fname,
+          title: e.title ? e.title.replace(/ \(part \d+\/\d+\)$/, '') : fname.replace(/^\d+_/, '').replace(/_/g,' ').replace(/\.pdf$/i,''),
+          pdf_url: e.pdf_url,
+          category: e.category,
+          chunks: 0,
+          created_at: e.created_at,
+          has_pdf: e.has_pdf
+        };
+      }
+      docs[fname].chunks++;
+    });
+
+    const docList = Object.values(docs).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    el.innerHTML = `
+    <div class="section-header" style="margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text-muted)">${docList.length} document${docList.length!==1?'s':''} uploaded</div>
+      <button class="btn btn-primary btn-sm" onclick="switchKBTab('pdf')">⬆️ Upload New PDF</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+      ${docList.map(doc => `
+      <div class="card" style="margin-bottom:0;cursor:pointer;transition:all .2s" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:36px;flex-shrink:0">📄</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${doc.title}">${doc.title}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${doc.chunks} chunk${doc.chunks!==1?'s':''} · ${catBadge(doc.category)}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">${doc.created_at ? new Date(doc.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-secondary btn-xs" onclick="previewPDF('${doc.filename}', '${doc.pdf_url||''}')">👁 Preview</button>
+              ${doc.pdf_url ? `<a href="${doc.pdf_url}" target="_blank" rel="noreferrer noopener" class="btn btn-secondary btn-xs">⬇️ Download</a>` : ''}
+              <button class="btn btn-danger btn-xs" onclick="deleteDocAndChunks('${doc.filename}')">🗑️ Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  } catch(e) {
+    el.innerHTML = emptyState('⚠️', 'Error loading documents', e.message);
+  }
+}
+
+async function deleteDocAndChunks(filename) {
+  if (!confirm('Delete this document and all its KB chunks? This cannot be undone.')) return;
+  try {
+    // Get all KB entries with this filename
+    const { data } = await apiFetch('/knowledge-base?source=pdf_manual&limit=100');
+    const chunks = data.filter(e => e.pdf_filename === filename);
+    for (const chunk of chunks) {
+      await apiFetch('/knowledge-base/' + chunk.id, { method: 'DELETE' });
+    }
+    toast('Document and ' + chunks.length + ' chunks deleted', 'success');
+    renderKBDocs();
+    renderKBList(1);
+  } catch(e) { toast('Delete failed: ' + e.message, 'error'); }
+}
+
+function renderKBPDF() {
+  const el = document.getElementById('kb-pdf-section');
+  el.innerHTML = `
+  <div class="card" style="max-width:640px">
+    <div class="card-title">📄 Upload Product Manual (PDF)</div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="pdf-cat">${['product_info','usage','warranty','other'].map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+    </div>
+    <div class="upload-zone" id="pdf-upload-zone" onclick="document.getElementById('pdf-file').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')"
+         ondrop="handlePDFDrop(event)">
+      <div class="upload-icon">📄</div>
+      <p>Click or drag a PDF manual here</p>
+      <div class="upload-hint">Text will be extracted, chunked, and embedded into the knowledge base</div>
+    </div>
+    <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="uploadPDF(this.files[0])">
+    <div id="pdf-result" style="margin-top:14px"></div>
+  </div>
+  <div id="pdf-preview-area"></div>`;
+}
+
+function handlePDFDrop(e) {
+  e.preventDefault();
+  document.getElementById('pdf-upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) uploadPDF(file);
+}
+
+async function uploadPDF(file) {
+  if (!file) return;
+  const cat = document.getElementById('pdf-cat')?.value||'product_info';
+  const res_el = document.getElementById('pdf-result');
+  res_el.innerHTML = '<div style="color:var(--text-muted);display:flex;align-items:center;gap:8px">⏳ Uploading and extracting text...</div>';
+  const form = new FormData();
+  form.append('pdf', file);
+  form.append('category', cat);
+  try {
+    const res = await fetch(`${API}/knowledge-base/upload-pdf`, { method:'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    res_el.innerHTML = `<div style="color:var(--success);display:flex;align-items:center;gap:8px">✅ Stored ${data.chunks_stored} chunks from ${data.total_chars.toLocaleString()} characters</div>`;
+    if (data.pdf_url) {
+      document.getElementById('pdf-preview-area').innerHTML = `
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">👁 PDF Preview: ${file.name}</div>
+        <iframe class="pdf-preview" src="${data.pdf_url}"></iframe>
+      </div>`;
+    }
+    await refreshKBList();
+  } catch (e) { res_el.innerHTML = `<div style="color:var(--danger);display:flex;align-items:center;gap:8px">✕ ${e.message}</div>`; }
+}
+
+function previewPDF(filename, url) {
+  // Always use backend stream endpoint - most reliable regardless of storage config
+  const previewUrl = API + '/knowledge-base/pdf/' + encodeURIComponent(filename);
+  console.log('[PDF Preview] URL:', previewUrl);
+
+  const existing = document.getElementById('pdf-modal-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'pdf-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
+
+  overlay.innerHTML =
+    '<div style="background:var(--card);border-radius:var(--radius-lg);width:100%;max-width:920px;height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg)">' +
+      '<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;gap:12px">' +
+        '<span style="font-size:18px">📄</span>' +
+        '<span style="font-weight:600;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + filename + '</span>' +
+        '<button id="pdf-close-btn" style="background:var(--danger-bg);color:var(--danger);border:1px solid rgba(234,0,30,.2);padding:5px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:600">✕ Close</button>' +
+      '</div>' +
+      '<iframe src="' + previewUrl + '" style="flex:1;border:none;width:100%;background:#fff"></iframe>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('pdf-close-btn').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+async function deleteKB(id) {
+  if (!confirm('Delete this knowledge base entry? This cannot be undone.')) return;
+  try {
+    await apiFetch('/knowledge-base/' + id, { method:'DELETE' });
+    toast('KB entry deleted', 'success');
+    await refreshKBList();
+  } catch(e) { toast('Delete failed: ' + e.message, 'error'); }
+}
+
+async function backfillEmbeddings() {
+  try {
+    toast('Generating embeddings...', 'info');
+    const r = await apiFetch('/knowledge-base/backfill-embeddings', { method:'POST' });
+    toast(`${r.done} of ${r.total} embeddings generated`, r.done > 0 ? 'success' : 'info');
+  } catch(e) { toast('Backfill failed: ' + e.message, 'error'); }
+}
+
+// ── AGENTS ─────────────────────────────────────────────────────────
+async function loadAgents() {
+  const el = document.getElementById('tab-agents');
+  el.innerHTML = `
+  <div class="page-header">
+    <div class="breadcrumb">🏠<span>/</span>Agents</div>
+    <h1>Agents</h1>
+    <p>Manage agent workload, assignments, and SLA performance.</p>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" id="ag-tab-workload" onclick="switchAgentTab('workload')">Workload</button>
+    <button class="tab-btn" id="ag-tab-manage" onclick="switchAgentTab('manage')">Manage Agents</button>
+  </div>
+  <div id="ag-workload-section"><div class="loading">⏳ Loading...</div></div>
+  <div id="ag-manage-section" style="display:none"></div>`;
+  await refreshAgentWorkload();
+  renderAgentManage();
+}
+
+function switchAgentTab(tab) {
+  ['workload','manage'].forEach(t => {
+    document.getElementById(`ag-tab-${t}`)?.classList.toggle('active', t===tab);
+    document.getElementById(`ag-${t}-section`).style.display = t===tab?'':'none';
+  });
+}
+
+async function refreshAgentWorkload() {
+  const el = document.getElementById('ag-workload-section');
+  try {
+    const agents = await apiFetch('/agents/workload');
+    if (!agents.length) { el.innerHTML = emptyState('👥','No agents configured','Add agents to enable auto-routing and workload tracking.','Add Agent','switchAgentTab(\'manage\')'); return; }
+    el.innerHTML = `<div class="agent-grid">
+      ${agents.map(a=>`
+      <div class="agent-card">
+        <div class="agent-avatar">${a.name.charAt(0).toUpperCase()}</div>
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-role">${a.role} · ${(a.skills||[]).slice(0,2).join(', ')}${a.skills?.length>2?'…':''}</div>
+        <span class="badge-pill ${a.is_active?'badge-green':'badge-gray'}" style="margin-bottom:8px">${a.is_active?'Active':'Inactive'}</span>
+        ${a.sla_breached>0?`<div style="background:var(--danger-bg);border:1px solid rgba(234,0,30,.2);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px;color:var(--danger);margin-bottom:10px">⚠️ ${a.sla_breached} question${a.sla_breached>1?'s':''} over 24hrs</div>`:''}
+        <div class="agent-stats">
+          <div class="agent-stat"><div class="val">${a.open_questions}</div><div class="lbl">Open</div></div>
+          <div class="agent-stat"><div class="val">${a.answered_today}</div><div class="lbl">Today</div></div>
+          <div class="agent-stat"><div class="val ${a.sla_breached>0?'sla-alert':''}">${a.sla_breached}</div><div class="lbl">SLA</div></div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  } catch (e) { el.innerHTML = emptyState('⚠️','Error',e.message); }
+}
+
+function agentOptions(selectedVal) {
+  let opts = '<option value="">Reassign to...</option>';
+  if (agentsCache && agentsCache.length > 0) {
+    agentsCache.forEach(function(a) {
+      opts += '<option value="'+a.name+'"'+(a.name===selectedVal?' selected':'')+'>'+a.name+' ('+a.role+')</option>';
+    });
+  } else {
+    ['Alex Agent','Jamie Agent','Sarah Manager'].forEach(function(n) {
+      opts += '<option value="'+n+'">'+n+'</option>';
+    });
+  }
+  return opts;
+}
+
+function showEditAgentForm(id, name, role, skills, retailers) {
+  const form = document.getElementById('add-agent-form');
+  if (!form) return;
+  form.innerHTML = `
+  <div class="card" style="margin-bottom:16px;background:var(--bg-secondary)">
+    <h4 style="margin-bottom:12px">✏️ Edit Agent: ${name}</h4>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><label class="form-label">Name</label><input class="form-input" id="edit-name" value="${name}"></div>
+      <div><label class="form-label">Role</label>
+        <select class="form-select" id="edit-role">
+          <option value="agent" ${role==='agent'?'selected':''}>Agent</option>
+          <option value="manager" ${role==='manager'?'selected':''}>Manager</option>
+          <option value="admin" ${role==='admin'?'selected':''}>Admin</option>
+        </select>
+      </div>
+      <div><label class="form-label">Skills (comma-separated)</label><input class="form-input" id="edit-skills" value="${skills}" placeholder="product_info,warranty"></div>
+      <div><label class="form-label">Retailers (comma-separated)</label><input class="form-input" id="edit-retailers" value="${retailers}" placeholder="bestbuy,amazon"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-primary btn-sm" onclick="updateAgent('${id}')">💾 Save Changes</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('add-agent-form').innerHTML=''">Cancel</button>
+    </div>
+  </div>`;
+}
+
+async function updateAgent(id) {
+  const name     = document.getElementById('edit-name')?.value?.trim();
+  const role     = document.getElementById('edit-role')?.value;
+  const skills   = (document.getElementById('edit-skills')?.value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  const retailers= (document.getElementById('edit-retailers')?.value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  if (!name) return toast('Name is required','error');
+  try {
+    await apiFetch('/agents/'+id, { method:'PATCH', body: JSON.stringify({ name, role, skills, retailers }) });
+    toast('Agent updated','success');
+    document.getElementById('add-agent-form').innerHTML = '';
+    renderAgentManage();
+  } catch(e) { toast('Update failed: '+e.message,'error'); }
+}
+
+async function renderAgentManage() {
+  const el = document.getElementById('ag-manage-section');
+  try {
+    const agents = await apiFetch('/agents');
+    if (Array.isArray(agents)) agentsCache = agents;
+    el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button class="btn btn-primary btn-sm" onclick="showAddAgentForm()">+ Add Agent</button>
+    </div>
+    <div id="add-agent-form"></div>
+    <div class="card">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Role</th><th>Skills</th><th>Retailers</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${agents.map(a=>`
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">${a.name.charAt(0)}</div>
+            <span style="font-weight:600">${a.name}</span>
+          </div></td>
+          <td><span class="badge-pill ${a.role==='admin'?'badge-red':a.role==='manager'?'badge-purple':'badge-blue'}">${a.role}</span></td>
+          <td style="font-size:11px;color:var(--text-muted)">${(a.skills||[]).join(', ')||'—'}</td>
+          <td style="font-size:11px;color:var(--text-muted)">${(a.retailer_ids||[]).join(', ')||'all'}</td>
+          <td><span class="badge-pill ${a.is_active?'badge-green':'badge-gray'}">${a.is_active?'Active':'Inactive'}</span></td>
+          <td><button class="btn btn-danger btn-xs" onclick="deleteAgent('${a.id}')">🗑️</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div></div>`;
+  } catch (e) { el.innerHTML = emptyState('⚠️','Error',e.message); }
+}
+
+function showAddAgentForm() {
+  const el = document.getElementById('add-agent-form');
+  const allSkills = ['product_info','pricing','warranty','compatibility','usage','complaints','returns','other'];
+  el.innerHTML = `
+  <div class="card" style="margin-bottom:20px;max-width:520px">
+    <div class="card-title">👤+ New Agent</div>
+    <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="new-agent-name" placeholder="Agent full name"></div>
+    <div class="form-group"><label class="form-label">Role</label>
+      <select class="form-select" id="new-agent-role"><option value="agent">Agent</option><option value="manager">Manager</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Skills <span style="color:var(--text-muted);font-weight:400">(Ctrl+click for multiple)</span></label>
+      <select class="form-select" id="new-agent-skills" multiple style="height:130px">${allSkills.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-primary" onclick="createAgent()">✓ Create Agent</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('add-agent-form').innerHTML=''">✕ Cancel</button>
+    </div>
+  </div>`;
+}
+
+async function createAgent() {
+  const name = document.getElementById('new-agent-name')?.value;
+  const role = document.getElementById('new-agent-role')?.value;
+  const skills = [...document.getElementById('new-agent-skills').selectedOptions].map(o=>o.value);
+  if (!name) return toast('Name required','error');
+  try {
+    await apiFetch('/agents', { method:'POST', body: JSON.stringify({ name, role, skills, retailer_ids:['bestbuy','amazon'] }) });
+    toast('Agent created successfully', 'success');
+    document.getElementById('add-agent-form').innerHTML = '';
+    await renderAgentManage();
+  } catch(e) { const msg = e.message.includes('duplicate') ? 'An agent with this name already exists.' : 'Failed to create agent: ' + e.message;
+    toast(msg, 'error'); }
+}
+
+
+function filterTargets() {
+  const search   = (document.getElementById('st-search')?.value || '').toLowerCase();
+  const retailer = document.getElementById('st-retailer')?.value || '';
+  const status   = document.getElementById('st-status')?.value || '';
+  document.querySelectorAll('#targets-tbody tr').forEach(function(row) {
+    const text = row.textContent.toLowerCase();
+    const r = row.dataset.retailer || '';
+    const a = row.dataset.active || '';
+    const ms = !search   || text.includes(search);
+    const mr = !retailer || r === retailer;
+    const ma = !status   || (status==='active' ? a==='true' : a==='false');
+    row.style.display = (ms && mr && ma) ? '' : 'none';
+  });
+}
+
+async function deleteAgent(id) {
+  if (!confirm('Delete this agent? Any questions assigned to them will remain assigned.')) return;
+  try {
+    await apiFetch('/agents/' + id, { method:'DELETE' });
+    toast('Agent deleted', 'success');
+    await renderAgentManage();
+  } catch(e) { toast('Delete failed: ' + e.message, 'error'); }
+}
+
+// ── SCRAPE LOGS ────────────────────────────────────────────────────
+async function loadScrapeLogs() {
+  const el = document.getElementById('tab-scrape-logs');
+  el.innerHTML = `
+  <div class="page-header">
+    <div class="breadcrumb">🏠<span>/</span>Scrape Logs</div>
+    <h1>Scrape Logs</h1>
+    <p>History of all scraping activity across BestBuy and Amazon.</p>
+  </div>
+  <div class="loading">⏳ Loading logs...</div>`;
+  try {
+    const logs = await apiFetch('/scrape/logs?limit=100');
+    if (!logs.length) { el.innerHTML = el.innerHTML.replace('<div class="loading">⏳ Loading logs...</div>','') + emptyState('📋','No scrape logs yet','Logs will appear after the first scrape run.'); return; }
+    const errorCount = logs.filter(l=>l.error).length;
+    const newTotal = logs.reduce((s,l)=>s+l.new_count,0);
+    el.innerHTML = `
+    <div class="page-header">
+      <div class="breadcrumb">🏠<span>/</span>Scrape Logs</div>
+      <h1>Scrape Logs</h1>
+      <p>${logs.length} recent runs · ${newTotal} new questions found · ${errorCount} errors</p>
+    </div>
+    ${logs.map(l=>`
+    <div class="log-entry ${l.error?'has-error':''}">
+      <span class="log-time">🕐 ${new Date(l.scraped_at).toLocaleString()}</span>
+      ${retailerBadge(l.retailer)}
+      <span style="font-weight:500">${l.product_name}</span>
+      <span class="badge-pill badge-gray">⚙️ ${l.engine_used}</span>
+      <span style="color:var(--text-secondary)">Found: <strong>${l.found_count}</strong></span>
+      <span style="color:var(--success)">New: <strong>${l.new_count}</strong></span>
+      ${l.error?`<span style="color:var(--danger);font-size:11px">✕ ${l.error}</span>`:'<span style="color:var(--success);font-size:11px">✅ OK</span>'}
+    </div>`).join('')}`;
+  } catch (e) { el.innerHTML = emptyState('⚠️','Error',e.message); }
+}
+
+// ── POST ANSWERS ───────────────────────────────────────────────────
+async function loadPostAnswers() {
+  const el = document.getElementById('tab-post-answers');
+  el.innerHTML = `
+  <div class="page-header">
+    <div class="breadcrumb">🏠<span>/</span>Post Answers</div>
+    <h1>Post Answers</h1>
+    <p>Post approved answers back to retailer platforms. Disabled by default for PoC.</p>
+  </div>`;
+  try {
+    const cfg = await apiFetch('/post-answers/config');
+    const posting_enabled = cfg.posting_enabled;
+    el.innerHTML += `
+    <div class="card" style="max-width:640px;margin-bottom:20px">
+      <div class="card-title">📤 Posting Configuration</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <label class="toggle-switch"><input type="checkbox" ${posting_enabled?'checked':''} onchange="togglePosting(this.checked)"><span class="toggle-slider"></span></label>
+        <div>
+          <div style="font-weight:600;font-size:14px">${posting_enabled?'<span style="color:var(--success)">Posting Enabled</span>':'Posting Disabled'}</div>
+          <div style="font-size:12px;color:var(--text-muted)">PoC Mode — off by default</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6">When enabled, approved answers can be submitted back to BestBuy and Amazon product pages. This feature is disabled by default for the PoC demonstration.</p>
+      ${!posting_enabled?`<div style="margin-top:14px;padding:12px 14px;background:var(--warning-bg);border:1px solid rgba(221,122,1,.3);border-radius:var(--radius-sm);font-size:12px;color:var(--warning);display:flex;align-items:center;gap:8px">⚠️ Enable the toggle above to allow answers to be posted to retailer platforms.</div>`:''}
+    </div>
+    <div class="card" id="post-queue-card"><div class="loading">⏳ Loading answered questions...</div></div>`;
+    await refreshPostQueue();
+  } catch (e) { el.innerHTML += emptyState('⚠️','Error',e.message); }
+}
+
+async function togglePosting(enabled) {
+  try {
+    await apiFetch('/post-answers/toggle', { method:'POST', body: JSON.stringify({ enabled }) });
+    toast(enabled ? 'Posting to retailer sites enabled' : 'Posting disabled (PoC mode)', 'success');
+    await loadPostAnswers();
+  } catch(e) { toast('Failed to toggle posting: ' + e.message, 'error'); }
+}
+
+async function refreshPostQueue() {
+  const card = document.getElementById('post-queue-card');
+  if (!card) return;
+  try {
+    const { data } = await apiFetch('/questions?status=answered&limit=20');
+    if (!data?.length) { card.innerHTML = emptyState('📤','No answered questions to post','Questions will appear here once approved.'); return; }
+    card.innerHTML = `
+    <div class="card-title">📋 Answered Questions — Post Queue</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Question</th><th>Retailer / Product</th><th>Date Answered</th><th>Posted</th><th>Action</th></tr></thead>
+      <tbody>${data.map(q=>`
+        <tr>
+          <td style="max-width:300px">
+            <div style="font-weight:500;font-size:13px;margin-bottom:4px">${q.question_text}</div>
+            ${q.ai_answer ? '<div style="font-size:11px;color:var(--text-muted);line-height:1.4;border-left:2px solid var(--success);padding-left:6px">'+q.ai_answer.substring(0,120)+(q.ai_answer.length>120?'...':'')+'</div>' : ''}
+          </td>
+          <td style="max-width:0">${q.product_url ? '<a href="'+q.product_url+'" target="_blank" rel="noreferrer" style="text-decoration:none">'+retailerBadge(q.retailer)+'</a><div style="font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px" title="'+(q.product_name||'')+'">'+(q.product_name||'').substring(0,28)+'</div>' : retailerBadge(q.retailer)}</td>
+          <td style="font-size:12px;color:var(--text-muted)">${q.date_answered?new Date(q.date_answered).toLocaleDateString():'—'}</td>
+          <td>${q.posted_to_retailer?'<span class="badge-pill badge-green">✓ Posted</span>':'<span class="badge-pill badge-gray">Not Posted</span>'}</td>
+          <td>${!q.posted_to_retailer?`<button class="btn btn-primary btn-xs" onclick="postAnswer('${q.id}')">📤 Post</button>`:'—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  } catch (e) { card.innerHTML = emptyState('⚠️','Error',e.message); }
+}
+
+async function postAnswer(id) {
+  try { const r = await apiFetch(`/post-answers/${id}`, { method:'POST' }); toast(r.message||'Posted','success'); await refreshPostQueue(); }
+  catch (e) { toast(e.message,'error'); }
+}
+
+// ── CONFIG ─────────────────────────────────────────────────────────
+async function loadConfig_tab() {
+  const el = document.getElementById('tab-config');
+  el.innerHTML = `
+  <div class="page-header">
+    <div class="breadcrumb">🏠<span>/</span>Configuration</div>
+    <h1>Configuration</h1>
+    <p>App settings, API connection, scraping schedule, and theme preferences.</p>
+  </div>
+  <div class="loading">⏳ Loading...</div>`;
+  try {
+    const cfg = await apiFetch('/config');
+    const sc = cfg.scraping_config || {};
+    const savedApiUrl = localStorage.getItem('cqm_api_url') || '';
+    const savedTheme  = localStorage.getItem('cqm_theme') || 'light';
+    el.innerHTML = `
+    <div class="page-header">
+      <div class="breadcrumb">🏠<span>/</span>Configuration</div>
+      <h1>Configuration</h1>
+      <p>App settings, API connection, scraping schedule, and theme preferences.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px">
+      <div class="card">
+        <div class="card-title">🔌 App Settings</div>
+        <div class="form-group">
+          <label class="form-label">Backend API URL</label>
+          <input class="form-input" id="cfg-api-url" value="${savedApiUrl}" placeholder="https://your-app.onrender.com/api">
+          <div class="form-hint">Your Render backend URL. Stored in browser — no redeployment needed.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Theme</label>
+          <select class="form-select" id="cfg-theme">
+            <option value="light" ${savedTheme==='light'?'selected':''}>☀️ Light Mode</option>
+            <option value="dark" ${savedTheme==='dark'?'selected':''}>🌙 Dark Mode</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="saveAppSettings()">💾 Save App Settings</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🕷 Scraping Configuration</div>
+        <div class="form-group">
+          <label class="form-label">Scraping Engine</label>
+          <select class="form-select" id="cfg-engine">
+            <option value="scraperapi" ${sc.engine==='scraperapi'?'selected':''}>ScraperAPI (Free 1,000/month)</option>
+            <option value="apify" ${sc.engine==='apify'?'selected':''}>Apify (Leadership Demo)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Auto-Scrape Interval (minutes, min 5)</label>
+          <input class="form-input" type="number" id="cfg-interval" value="${sc.interval_minutes||10}" min="5">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:12px">
+          <label class="toggle-switch"><input type="checkbox" id="cfg-auto" ${sc.auto_enabled?'checked':''}><span class="toggle-slider"></span></label>
+          <span class="form-label" style="margin:0">Auto-scraping enabled</span>
+        </div>
+        <button class="btn btn-primary" onclick="saveConfig()">💾 Save Scraping Config</button>
+      </div>
+    </div>`;
+  } catch (e) { el.innerHTML += emptyState('⚠️','Error',e.message); }
+}
+
+function saveAppSettings() {
+  try {
+    const apiUrl = document.getElementById('cfg-api-url')?.value?.trim();
+    const theme  = document.getElementById('cfg-theme')?.value || 'light';
+    if (apiUrl) {
+      if (!apiUrl.startsWith('http')) return toast('API URL must start with http:// or https://', 'error');
+      const url = apiUrl.endsWith('/api') ? apiUrl : apiUrl.replace(/\/$/, '') + '/api';
+      localStorage.setItem('cqm_api_url', url);
+      API = url;
+      toast('API URL saved — reloading...', 'success');
+    } else {
+      toast('Please enter a backend API URL', 'error');
+      return;
+    }
+    applyTheme(theme);
+    setTimeout(() => location.reload(), 800);
+  } catch(e) { toast('Failed to save settings: ' + e.message, 'error'); }
+}
+
+async function saveConfig() {
+  const engine = document.getElementById('cfg-engine')?.value;
+  const interval_minutes = parseInt(document.getElementById('cfg-interval')?.value)||10;
+  const auto_enabled = document.getElementById('cfg-auto')?.checked||false;
+  try {
+    await apiFetch('/scrape/config', { method:'POST', body: JSON.stringify({ engine, interval_minutes, auto_enabled }) });
+    scrapingConfig = { engine, interval_minutes, auto_enabled };
+    setEngineUI(engine);
+    const autoToggle = document.getElementById('auto-toggle');
+    if (autoToggle) autoToggle.checked = auto_enabled;
+    toast('Scraping configuration saved', 'success');
+  } catch(e) { toast('Failed to save config: ' + e.message, 'error'); }
+}
+
+// ── HELPERS ────────────────────────────────────────────────────
+function openRetailerUrl(url) {
+  // Open with no referrer to bypass Amazon/BestBuy referrer blocks
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noreferrer noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+function retailerBadge(retailer) {
+  if (!retailer) return '—';
+  const map = {
+    bestbuy: { cls: 'badge-blue',   label: '🛒 BestBuy' },
+    amazon:  { cls: 'badge-orange', label: '📦 Amazon'  },
+    target:  { cls: 'badge-red',    label: '🎯 Target'  },
+  };
+  const r = map[retailer] || { cls: 'badge-gray', label: retailer };
+  return `<span class="badge-pill ${r.cls}">${r.label}</span>`;
+}
+
+function catBadge(cat) {
+  const map = { product_info:'badge-blue', pricing:'badge-green', warranty:'badge-purple', compatibility:'badge-blue', usage:'badge-orange', complaints:'badge-red', returns:'badge-yellow', other:'badge-gray' };
+  return cat ? `<span class="badge-pill ${map[cat]||'badge-gray'}">${cat.replace('_',' ')}</span>` : '—';
+}
+
+function sentBadge(s) {
+  const map = { positive:'badge-green', neutral:'badge-gray', negative:'badge-red' };
+  const icons = { positive:'fa-face-smile', neutral:'fa-face-meh', negative:'fa-face-frown' };
+  return s ? `<span class="badge-pill ${map[s]||'badge-gray'}"> ${s}</span>` : '—';
+}
+
+function confidenceBadge(c) {
+  if (c == null) return '—';
+  const color = c >= 70 ? 'var(--success)' : c >= 40 ? 'var(--warning)' : 'var(--danger)';
+  return `<div style="min-width:64px">
+    <span style="color:${color};font-weight:700;font-size:13px">${c}%</span>
+    <div class="confidence-bar"><div class="confidence-fill" style="width:${c}%;background:${color}"></div></div>
+  </div>`;
+}
+
+function emptyState(icon, title, subtitle, btnLabel, btnFn) {
+  return `<div class="empty">
+    <div class="empty-icon"></div>
+    <div class="empty-title">${title}</div>
+    <div class="empty-sub">${subtitle||''}</div>
+    ${btnLabel ? `<button class="btn btn-primary btn-sm" onclick="${btnFn}">+ ${btnLabel}</button>` : ''}
+  </div>`;
+}
+
+function pagination(total, page, limit, fn) {
+  const pages = Math.ceil(total / limit);
+  if (pages <= 1) return '';
+  const btns = [];
+  for (let i = 1; i <= Math.min(pages, 7); i++) {
+    btns.push(`<button class="page-btn ${i===page?'active':''}" onclick="${fn}(${i})">${i}</button>`);
+  }
+  return `<div class="pagination">${btns.join('')}<span style="font-size:12px;color:var(--text-muted);margin-left:4px">${total} total</span></div>`;
+}
+</script>
+
+<!-- BUILD: v3.0 -->
+</body>
+</html>
