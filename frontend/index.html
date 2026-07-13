@@ -1109,7 +1109,7 @@ async function refreshTargets() {
     <div class="table-wrap"><table>
       <thead><tr>
         <th>Retailer / Product</th><th>Product</th><th>URL</th><th>Status</th>
-        <th>Last Scraped</th><th>Questions Found</th><th>Active</th><th>Actions</th>
+        <th>Last Scraped</th><th>Questions Found</th><th>Re-scrape</th><th>Actions</th>
       </tr></thead>
       <tbody id="targets-tbody">${targets.map(t=>`
         <tr data-retailer="${t.retailer}" data-active="${t.is_active}">
@@ -1119,7 +1119,7 @@ async function refreshTargets() {
           <td><span class="badge-pill ${t.is_active?'badge-green':'badge-gray'}">${t.is_active?'Active':'Inactive'}</span></td>
           <td style="color:var(--text-muted);font-size:12px">${t.last_scraped_at?new Date(t.last_scraped_at).toLocaleString():'Never'}</td>
           <td style="font-weight:600">${t.questions_found_total||0}</td>
-          <td><label class="toggle-switch"><input type="checkbox" ${t.is_active?'checked':''} onchange="toggleTarget('${t.id}',this.checked)"><span class="toggle-slider"></span></label></td>
+          <td><label class="toggle-switch" title="${t.is_active ? 'Scraping enabled — will run on next schedule or Now' : 'Enable to re-scrape and reprocess all questions with current KB'}"><input type="checkbox" ${t.is_active?'checked':''} onchange="toggleTarget('${t.id}',this.checked)"><span class="toggle-slider"></span></label></td>
           <td><div class="flex gap-2">
             <button class="btn btn-secondary btn-xs" onclick="scrapeTarget('${t.id}')">⚡ Now</button>
             <button class="btn btn-danger btn-xs" onclick="deleteTarget('${t.id}')">🗑️</button>
@@ -1133,7 +1133,12 @@ async function refreshTargets() {
 async function toggleTarget(id, active) {
   try {
     await apiFetch(`/scrape-targets/${id}`, { method:'PATCH', body: JSON.stringify({ is_active: active }) });
-    toast(`Target ${active ? 'activated' : 'deactivated'}`, 'success');
+    if (active) {
+      toast('Target enabled — scrape will re-run and reprocess all questions with current KB', 'success');
+    } else {
+      toast('Target disabled', 'success');
+    }
+    await refreshTargets();
   } catch(e) {
     toast('Failed to update target: ' + e.message, 'error');
     await refreshTargets(); // Revert toggle in UI
