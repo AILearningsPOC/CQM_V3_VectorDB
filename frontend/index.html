@@ -129,6 +129,7 @@ button { font-family: inherit; cursor: pointer; }
 .toggle-slider { position: absolute; inset: 0; background: #6b7280; border-radius: 20px; cursor: pointer; transition: var(--t); }
 .toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: var(--t); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
 .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+.scrape-target-toggle input:checked + .toggle-slider { background: #16a34a; }
 .toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
 .engine-toggle { display: flex; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.4); border-radius: var(--radius-sm); overflow: hidden; }
 .engine-btn { padding: 5px 11px; cursor: pointer; color: rgba(255,255,255,.95); transition: all var(--t); border: none; background: transparent; font-size: 11px; font-weight: 600; font-family: inherit; opacity: 1 !important; pointer-events: all !important; }
@@ -1120,9 +1121,9 @@ async function refreshTargets() {
           <td style="color:var(--text-muted);font-size:12px">${t.last_scraped_at?new Date(t.last_scraped_at).toLocaleString():'Never'}</td>
           <td style="font-weight:600">${t.questions_found_total||0}</td>
           <td style="text-align:center">
-            <label class="toggle-switch" style="width:44px;height:24px" title="${t.is_active ? 'Enabled — click to disable' : 'Enable to re-scrape and reprocess all questions with current KB'}">
+            <label class="toggle-switch scrape-target-toggle" title="${t.is_active ? 'Enabled — click to disable' : 'Enable to re-scrape and reprocess all questions with current KB'}">
               <input type="checkbox" ${t.is_active?'checked':''} onchange="toggleTarget('${t.id}',this.checked)">
-              <span class="toggle-slider" style="background:${t.is_active?'#1a7f3c':'#6b7280'};border-radius:24px"></span>
+              <span class="toggle-slider"></span>
             </label>
           </td>
           <td><div class="flex gap-2">
