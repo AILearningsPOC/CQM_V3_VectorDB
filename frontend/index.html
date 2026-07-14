@@ -126,7 +126,7 @@ button { font-family: inherit; cursor: pointer; }
 .toggle-group { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.9); white-space: nowrap; }
 .toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer; transition: var(--t); }
+.toggle-slider { position: absolute; inset: 0; background: #6b7280; border-radius: 20px; cursor: pointer; transition: var(--t); }
 .toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: var(--t); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
 .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
 .toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
@@ -1108,8 +1108,8 @@ async function refreshTargets() {
     card.innerHTML = `
     <div class="table-wrap"><table>
       <thead><tr>
-        <th>Retailer / Product</th><th>Product</th><th>URL</th><th>Status</th>
-        <th>Last Scraped</th><th>Questions Found</th><th>Re-scrape</th><th>Actions</th>
+        <th style="white-space:normal;min-width:90px">Retailer /<br>Product</th><th style="min-width:180px">Product</th><th style="min-width:50px">URL</th><th style="min-width:70px">Status</th>
+        <th style="white-space:normal;min-width:80px">Last<br>Scraped</th><th style="white-space:normal;min-width:80px">Questions<br>Found</th><th style="white-space:normal;min-width:70px">Re-<br>scrape</th><th style="min-width:90px">Actions</th>
       </tr></thead>
       <tbody id="targets-tbody">${targets.map(t=>`
         <tr data-retailer="${t.retailer}" data-active="${t.is_active}">
@@ -1119,11 +1119,11 @@ async function refreshTargets() {
           <td><span class="badge-pill ${t.is_active?'badge-green':'badge-gray'}">${t.is_active?'Active':'Inactive'}</span></td>
           <td style="color:var(--text-muted);font-size:12px">${t.last_scraped_at?new Date(t.last_scraped_at).toLocaleString():'Never'}</td>
           <td style="font-weight:600">${t.questions_found_total||0}</td>
-          <td>
-            ${t.is_active
-              ? `<button class="btn btn-sm" style="background:var(--success,#22c55e);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleTarget('${t.id}',false)" title="Click to disable">✅ Enabled</button>`
-              : `<button class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleTarget('${t.id}',true)" title="Enable to re-scrape and reprocess all questions with current KB">▶ Enable</button>`
-            }
+          <td style="text-align:center">
+            <label class="toggle-switch" style="width:44px;height:24px" title="${t.is_active ? 'Enabled — click to disable' : 'Enable to re-scrape and reprocess all questions with current KB'}">
+              <input type="checkbox" ${t.is_active?'checked':''} onchange="toggleTarget('${t.id}',this.checked)">
+              <span class="toggle-slider" style="background:${t.is_active?'#1a7f3c':'#6b7280'};border-radius:24px"></span>
+            </label>
           </td>
           <td><div class="flex gap-2">
             <button class="btn btn-secondary btn-xs" onclick="scrapeTarget('${t.id}')">⚡ Now</button>
