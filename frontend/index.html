@@ -1119,7 +1119,12 @@ async function refreshTargets() {
           <td><span class="badge-pill ${t.is_active?'badge-green':'badge-gray'}">${t.is_active?'Active':'Inactive'}</span></td>
           <td style="color:var(--text-muted);font-size:12px">${t.last_scraped_at?new Date(t.last_scraped_at).toLocaleString():'Never'}</td>
           <td style="font-weight:600">${t.questions_found_total||0}</td>
-          <td><label class="toggle-switch" title="${t.is_active ? 'Scraping enabled — will run on next schedule or Now' : 'Enable to re-scrape and reprocess all questions with current KB'}"><input type="checkbox" ${t.is_active?'checked':''} onchange="toggleTarget('${t.id}',this.checked)"><span class="toggle-slider"></span></label></td>
+          <td>
+            ${t.is_active
+              ? `<button class="btn btn-sm" style="background:var(--success,#22c55e);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleTarget('${t.id}',false)" title="Click to disable">✅ Enabled</button>`
+              : `<button class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleTarget('${t.id}',true)" title="Enable to re-scrape and reprocess all questions with current KB">▶ Enable</button>`
+            }
+          </td>
           <td><div class="flex gap-2">
             <button class="btn btn-secondary btn-xs" onclick="scrapeTarget('${t.id}')">⚡ Now</button>
             <button class="btn btn-danger btn-xs" onclick="deleteTarget('${t.id}')">🗑️</button>
