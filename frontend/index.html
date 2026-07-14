@@ -130,6 +130,10 @@ button { font-family: inherit; cursor: pointer; }
 .toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: var(--t); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
 .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
 .scrape-target-toggle input:checked + .toggle-slider { background: #16a34a; }
+.scrape-target-toggle { width: 48px !important; height: 26px !important; }
+.scrape-target-toggle .toggle-slider { border-radius: 26px; }
+.scrape-target-toggle .toggle-slider:before { width: 18px; height: 18px; left: 4px; top: 4px; }
+.scrape-target-toggle input:checked + .toggle-slider:before { transform: translateX(22px); }
 .toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
 .engine-toggle { display: flex; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.4); border-radius: var(--radius-sm); overflow: hidden; }
 .engine-btn { padding: 5px 11px; cursor: pointer; color: rgba(255,255,255,.95); transition: all var(--t); border: none; background: transparent; font-size: 11px; font-weight: 600; font-family: inherit; opacity: 1 !important; pointer-events: all !important; }
